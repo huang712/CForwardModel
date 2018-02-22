@@ -5,7 +5,7 @@
 // I add second
 int main() {
     char L1dataFilename[1000] = "../../Data/CYGNSSL1/cyg06.ddmi.s20170904-000000-e20170904-235959.l1.power-brcs.a20.d20.nc";
-    int sampleIndex = 30545;  //30613   30619
+    int sampleIndex = 30613;  //30613   30619
     int ddm_index = 3;
     struct CYGNSSL1 l1data;
     readL1data(L1dataFilename, sampleIndex, ddm_index, &l1data);

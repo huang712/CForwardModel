@@ -162,7 +162,7 @@ void surface_calcGeomOverSurface(orbitGeometryStruct *geometry, int surfType, st
             }
 
             // correction for coordinate system (should technically correct direction too)
-            PUT[0] = -1 * PUT[0];
+            //PUT[0] = -1 * PUT[0];
 
             vector_unit(PUT, n_vec);
 
