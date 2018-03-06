@@ -6,8 +6,8 @@
 #include "string.h"
 #include "forwardmodel.h"
 
-#define NLAT 501
-#define NLON 501
+#define NLAT 721   //core: 501   synoptic: 721
+#define NLON 881   //core: 501   synoptic: 881
 
 #define ERR(e) {printf("Error: %s\n", nc_strerror(e));}
 
@@ -41,7 +41,7 @@ void init_metadata(struct CYGNSSL1 l1data, struct metadata *meta) {
     meta->surfaceCurvatureType = 1;//1 = spherical, 2 = flat
 
     meta->prn_code = l1data.prn_code;
-
+    meta->utc_sec = l1data.utc_sec;
 }
 
 void init_powerParm(struct CYGNSSL1 l1data, struct powerParm *pp){
@@ -99,7 +99,7 @@ void init_powerParm(struct CYGNSSL1 l1data, struct powerParm *pp){
 
 }
 
-void init_inputWindField(char windFileName[], struct inputWindField *iwf){
+void init_inputWindField_core(char windFileName[], struct inputWindField *iwf){
     printf("read wind field file\n");
     int ncid;
     int lat_varid, lon_varid, U10_varid, V10_varid;
@@ -171,6 +171,79 @@ void init_inputWindField(char windFileName[], struct inputWindField *iwf){
     }
 }
 
+void init_inputWindField_synoptic(char windFileName[], struct inputWindField *iwf){
+    printf("read wind field file\n");
+    int ncid;
+    int lat_varid, lon_varid, U10_varid, V10_varid;
+
+    /* Program variables to hold the data we will read. We will only
+       need enough space to hold one timestep of data; one record. */
+    float U10[NLAT][NLON];
+    float V10[NLAT][NLON];
+
+    /* These program variables hold the latitudes and longitudes. */
+    float lats[NLAT], lons[NLON];
+
+    /* Error handling. */
+    int retval;
+
+    /* Open the file. */
+    if ((retval = nc_open(windFileName, NC_NOWRITE, &ncid)))
+    ERR(retval);
+
+    /* Get the varids of the latitude and longitude coordinate variables. */
+    if ((retval = nc_inq_varid(ncid, "lat_0", &lat_varid)))  //lat_varid = 0;
+    ERR(retval);
+    if ((retval = nc_inq_varid(ncid, "lon_0", &lon_varid)))
+    ERR(retval);
+
+    /* Read the coordinate variable data. */
+    if ((retval = nc_get_var_float(ncid, lat_varid, &lats[0])))
+    ERR(retval);
+    if ((retval = nc_get_var_float(ncid, lon_varid, &lons[0])))
+    ERR(retval);
+
+    /* Get the varids of the U and V variables. */
+    if ((retval = nc_inq_varid(ncid, "UGRD_P0_L103_GLL0", &U10_varid)))
+    ERR(retval);
+    if ((retval = nc_inq_varid(ncid, "VGRD_P0_L103_GLL0", &V10_varid)))
+    ERR(retval)
+
+    //read U10 and V10 data   [Nlat][Nlon]
+    if ((retval = nc_get_var_float(ncid, U10_varid, &U10[0][0])))
+    ERR(retval);
+    if ((retval = nc_get_var_float(ncid, V10_varid, &V10[0][0])))
+    ERR(retval);
+
+    if ((retval = nc_close(ncid))) ERR(retval);
+
+    iwf->numPtsLat = NLAT;
+    iwf->numPtsLon = NLON;
+    iwf->numPts = iwf->numPtsLat * iwf->numPtsLon;
+    iwf->lat_min_deg = lats[0];
+    iwf->lat_max_deg = lats[NLAT-1];
+    iwf->lon_min_deg = lons[0];
+    iwf->lon_max_deg = lons[NLON-1];
+    iwf->resolution_lat_deg = -0.125;
+    iwf->resolution_lon_deg = 0.125;
+    iwf->data = (struct inputWindFieldPixel *)calloc(iwf->numPts,sizeof(struct inputWindFieldPixel));
+
+    int ind;
+    for(int lat = 0; lat < NLAT; lat++){
+        for(int lon = 0;lon < NLON; lon++){
+            ind = lon * NLAT + lat;
+            iwf->data[ind].windSpeed_U10_ms = U10[lat][lon];
+            if(iwf->data[ind].windSpeed_U10_ms > 1000) iwf->data[ind].windSpeed_U10_ms=NAN;
+            iwf->data[ind].windSpeed_V10_ms= V10[lat][lon];
+            if(iwf->data[ind].windSpeed_V10_ms > 1000) iwf->data[ind].windSpeed_V10_ms=NAN;
+            iwf->data[ind].rainRate_mmhr = 0;
+            iwf->data[ind].freezingHeight_m = 2;
+            iwf->data[ind].lat_deg = lats[lat];
+            iwf->data[ind].lon_deg = lons[lon];
+        }
+    }
+}
+
 void init_Geometry(struct CYGNSSL1 l1data, struct Geometry *geom){
 
     memcpy(geom->rx_position_ecef_m, l1data.rx_position_ecef_m, 3*sizeof(double));
@@ -180,25 +253,6 @@ void init_Geometry(struct CYGNSSL1 l1data, struct Geometry *geom){
     memcpy(geom->sp_position_ecef_m, l1data.sp_position_ecef_m, 3*sizeof(double));
     memcpy(geom->sc_att_rad, l1data.sc_att_rad, 3*sizeof(double));
 
-    /* index = 30613
-    geom->rx_position_ecef_m[0] = 3916480;
-    geom->rx_position_ecef_m[1] = -5534299;
-    geom->rx_position_ecef_m[2] = 1326429;
-    geom->rx_velocity_ecef_ms[0] = 5237;
-    geom->rx_velocity_ecef_ms[1] = 2720;
-    geom->rx_velocity_ecef_ms[2] = -4101;
-
-    geom->tx_position_ecef_m[0] = 15565665;
-    geom->tx_position_ecef_m[1] = -5152687;
-    geom->tx_position_ecef_m[2] = 20912839;
-    geom->tx_velocity_ecef_ms[0] = 1814;
-    geom->tx_velocity_ecef_ms[1] = 1939;
-    geom->tx_velocity_ecef_ms[2] = -863;
-
-    geom->sc_att_rad[0] = 0;
-    geom->sc_att_rad[1] = 0;
-    geom->sc_att_rad[2] = 0;
-    */
 }
 
 void init_DDM(struct CYGNSSL1 l1data, struct DDMfm *ddm_fm){

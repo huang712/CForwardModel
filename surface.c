@@ -410,8 +410,8 @@ complex double reflectionCoef(double Sxangle) {
     st  = sin(tet);
     ct  = cos(tet);
     esq = csqrt(eps-pow(st,2));
-    ev1 = (eps*ct-esq)/(eps*ct+esq);
-    ev2 = (ct-esq)/(ct+esq);
+    ev1 = (eps*ct-esq)/(eps*ct+esq); //corrected by Feixiong
+    ev2 = (ct-esq)/(ct+esq);        //corrected by Feixiong
     b1  = (ev1-ev2)/2; // Right-to-left circular polarization (LHCP)
     b2  = (ev1+ev2)/2; // Right-to-right circular polarization (RHCP)
     return(b1);

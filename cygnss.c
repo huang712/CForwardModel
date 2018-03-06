@@ -53,6 +53,7 @@ void readL1data(char L1dataFilename[], int sampleIndex, int ddm_index, struct CY
     l1data->sc_att_rad[1] = readnc_float_1d(ncid, "sc_roll", sampleIndex);
     l1data->sc_att_rad[2] = readnc_float_1d(ncid, "sc_yaw", sampleIndex);
 
+    l1data->utc_sec = readnc_int_1d(ncid, "ddm_timestamp_utc", sampleIndex);
     l1data->ddm_delay_row = readnc_int_2d(ncid, "brcs_ddm_peak_bin_delay_row", sampleIndex, ddm_index);
     l1data->ddm_dopp_col = readnc_int_2d(ncid, "brcs_ddm_peak_bin_dopp_col", sampleIndex, ddm_index);
     l1data->index = sampleIndex;

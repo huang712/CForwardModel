@@ -10,6 +10,7 @@
 
 struct CYGNSSL1
 {
+    int utc_sec;
     int sc_num;  //1-8
     int index; //index of measurement of the day
     int spNum; //1-4 reflection number
