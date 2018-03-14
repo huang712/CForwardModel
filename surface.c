@@ -1087,8 +1087,8 @@ void surface_createSurfaceMask(void){
 
     // determine DDM working range (i.e the max complete
     // delay "ellipse" on the surface by looking at the edges of the surface
-    int cx = floor( (1.0 * surface.numGridPtsX ) / 2 );//45
-    int cy = floor( (1.0 * surface.numGridPtsY ) / 2 );//45
+    int cx = (int)floor( (1.0 * surface.numGridPtsX ) / 2 );//45
+    int cy = (int)floor( (1.0 * surface.numGridPtsY ) / 2 );//45
     double val1  = surface.data[SURFINDEX(0, cy)].delay_s;//[0 45]
     double val2  = surface.data[SURFINDEX(surface.numGridPtsX - 1, cy)].delay_s;//[89 45]
     double val3  = surface.data[SURFINDEX(cx,0)].delay_s;//[45 0]
@@ -1144,7 +1144,6 @@ void surface_createSurfaceMask(void){
     }
     */
 
-    return;
 }
 
 void surface_resetToZero(void){
@@ -1180,7 +1179,7 @@ void surface_resetToZero(void){
     }
 }
 
-/*
+
 void surface_saveWindToFile(void) {  //added by Feixiong
     FILE *outp = fopen("surfaceWind.dat", "wb");
     for (int i = 0;i<surface.numGridPts;i++) {
@@ -1204,4 +1203,3 @@ void surface_saveDelayToFile(void) {  //added by Feixiong
     }
     fclose(outp);
 }
- */

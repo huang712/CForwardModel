@@ -32,6 +32,75 @@ double sec(double z){ return 1.0 / cos(z); }
 double csc(double z){ return 1.0 / sin(z); }
 
 //-----------------------------------------------------------------------------------
+void bubble(int *a,int n) //array a and length n
+{
+    int i,j,temp;
+    for(i=0;i<n-1;i++){
+        for(j=i+1;j<n;j++){
+            if(a[i]>a[j]) {
+                temp=a[i];
+                a[i]=a[j];
+                a[j]=temp;
+            }
+        }
+    }
+}
+
+void bilinear_interp(double *x_vec, double *y_vec, int size_x, int size_y, double x, double y, int *bi_index, double *bi_weight, double resolution){
+    //find indices from bilinear interpolation
+    //resolution = lat/lon resolution
+    //x=lat, y=lon, index= lon * NLAT + lat;
+    int ix1,ix2,iy1,iy2;
+    double x1,x2,y1,y2;
+    //find ix1 and ix2, the two index that are nearest to x
+
+    for (int i=0; i<size_x; i++){
+        if (fabs(x_vec[i]-x)<resolution){
+            ix1=i; ix2=i+1;
+            x1=x_vec[ix1]; x2=x_vec[ix2];
+            break;
+        }
+    }
+
+    for (int i=0; i<size_y; i++){
+        if (fabs(y_vec[i]-y)<resolution){
+            iy1=i; iy2=i+1;
+            y1=y_vec[iy1]; y2=x_vec[iy2];
+            break;
+        }
+    }
+
+    bi_index[0] = iy1*size_x+ix1; //index of Q11
+    bi_index[1] = iy1*size_x+ix2; //index of Q21
+    bi_index[2] = iy2*size_x+ix1; //index of Q12
+    bi_index[3] = iy2*size_x+ix2;//index of Q22
+
+    bi_weight[0] = (x2-x)*(y2-y)/((x2-x1)*(y2-y1)); //weight of Q11
+    bi_weight[1] = (x-x1)*(y2-y)/((x2-x1)*(y2-y1)); //weight of Q21
+    bi_weight[2] = (x2-x)*(y-y1)/((x2-x1)*(y2-y1)); //weight of Q12
+    bi_weight[3] = (x-x1)*(y-y1)/((x2-x1)*(y2-y1)); //weight of Q22
+
+}
+
+
+
+int find_nearest(double *vec, int size, double value){  //by Feixiong
+    //find the nearest value in vec[] and return the index
+    double diff, temp_diff;
+    int index;
+
+    index = 0;
+    diff = fabs(vec[0]-value);
+    for (int i = 0;i < size; i++){
+        temp_diff = fabs(vec[i] - value);
+        if (temp_diff < diff){
+            diff = temp_diff;
+            index = i;
+        }
+    }
+    return index;
+
+}
 
 double linear_interp( double a, double b, int direction, double time_01 ){
     if( direction == 0 )

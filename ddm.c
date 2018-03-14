@@ -33,6 +33,9 @@
 #include "gnssr.h"
 #include "forwardmodel.h"
 
+//prototypes only used within wind.c
+//int find_nearest(double *vec, int size, double value);
+
 void ddm_initialize(struct metadata meta) {
 
     //  Initialization of DDM:  Read in DDM params from config file and alloc
@@ -123,9 +126,10 @@ void ddm_binSurface(void) {
 }
 
 
-void ddm_Hmatrix(struct metadata meta, struct Jacobian *jacob){
+void ddm_Hmatrix(struct metadata meta, struct inputWindField iwf, struct Jacobian *jacob){
 
-    unsigned height = (unsigned) surface.numGridPts;  //8100
+
+    unsigned height = (unsigned) surface.numGridPts;  //14400
     unsigned width  = (unsigned) ddm.numBins;	//160000
     int startDelay_bin    = meta.resample_startBin[0];
     int startDoppelr_bin  = meta.resample_startBin[1];
@@ -139,50 +143,184 @@ void ddm_Hmatrix(struct metadata meta, struct Jacobian *jacob){
 
     _ddm_zero( H, width );
 
-    int surface_index;
-    int i=0;
+    int i, j, surface_index;
+    int numBins = numDelayBins * numDoppelrBins; //187
+    int numSurfacePt = meta.numGridPoints[0] * meta.numGridPoints[1] / 100; //144
+    double **H0; //2D array numBins * numSurfacePt 187x144
+    H0 = (double**)malloc(sizeof(double*) * numBins);//
+    for (i = 0; i < numBins; i++){//
+        H0[i] = (double*)malloc(sizeof(double)*numSurfacePt);
+    }
+
+    double *H0_lat_vec = (double *)calloc(numSurfacePt, sizeof(double)); //144
+    double *H0_lon_vec = (double *)calloc(numSurfacePt, sizeof(double)); //144
+
+    int i0=0; //index of ddmbin
+    int j0=0; //index of surfacePts
+    //int lat_index, lon_index;
     for(int m = 0 ; m < surface.numGridPtsX/10 ; m = m + 1)
     {
         for(int n = 0 ; n < surface.numGridPtsY/10 ; n = n + 1)
         {
             surface_index = (m * 10 + 4) * surface.numGridPtsY + n * 10 + 4; //resolution from 1km to 10km
+            H0_lat_vec[j0] = surface.data[surface_index].pos_llh[0];
+            H0_lon_vec[j0] = surface.data[surface_index].pos_llh[1];
+
             if (surface.data[surface_index].bin_index >= 0){
                 H[surface.data[surface_index].bin_index] = surface.data[surface_index].total_dP;
-                ddm_convolveH_FFT(2);
+                ddm_convolveH_FFT(2); //convolve H with ambiguity function, save into H
 
+                i0=0;
                 for (int k=startDoppelr_bin; k < (numDoppelrBins*resDoppelr_bins + startDoppelr_bin); k+=resDoppelr_bins) {
                     for (int l=startDelay_bin; l < (numDelayBins*resDelay_bins + startDelay_bin); l+=resDelay_bins) {
-                        jacob->data[i].value = creal(H[DDMINDEX(k,l)]) * 100;//H is derivative respect to pixel in 10km resolution
-                        i=i+1;
+                        H0[i0][j0] = creal(H[DDMINDEX(k,l)]) * 100;
+                        //jacob->data[i].value = creal(H[DDMINDEX(k,l)]) * 100;//H is derivative respect to pixel in 10km resolution
+                        i0 = i0+1;
                     }
                 }
-                _ddm_zero( H, width );
+                _ddm_zero( H, width ); // length of H = 187
             }
+            j0 = j0+1;
         }
     }
 
-    /* H in 1km resolution
-    for(int m = 0 ; m < surface.numGridPtsX ; m = m + 1)
+    //************** Compute H matrix for points on lat/lon ******************
+    //create lat/lon vector
+    double *lon_vec, *lat_vec;
+    lon_vec = (double *)calloc(iwf.numPtsLon,sizeof(double));
+    lat_vec = (double *)calloc(iwf.numPtsLat,sizeof(double));
+    for (i = 0; i < iwf.numPtsLon; i++){
+        lon_vec[i] = iwf.lon_min_deg + i*iwf.resolution_lon_deg-360;   //-180 ~ 180
+    }
+    for (i = 0; i < iwf.numPtsLat; i++){
+        lat_vec[i] = iwf.lat_min_deg + i*iwf.resolution_lat_deg;
+    }
+
+    //initialize matrix bi_weight[numSurfacePt][4]  bi_index[numSurfacePt][4]  in the bilinear interpolation
+    double **bi_weight;
+    int **bi_index;
+    bi_weight = (double**)malloc(sizeof(double*) * numSurfacePt);
+    for (i = 0; i < numSurfacePt; i++){
+        bi_weight[i] = (double*)malloc(sizeof(double)*4);
+    }
+    bi_index = (int**)malloc(sizeof(int*) * numSurfacePt);
+    for (i = 0; i < numSurfacePt; i++){
+        bi_index[i] = (int*)malloc(sizeof(int)*4);
+    }
+
+    //bilinear interpolation and get bi_index, bi_weight
+    for (i=0; i< numSurfacePt; i++){
+        bilinear_interp(lat_vec, lon_vec, iwf.numPtsLat, iwf.numPtsLon, H0_lat_vec[i], H0_lon_vec[i], bi_index[i], bi_weight[i], fabs(iwf.resolution_lat_deg));
+    }
+
+    int k = 0;
+    int *bi_index1 = (int *)calloc(numSurfacePt*4,sizeof(int));  //reshape bi_index to a 1D array
+    for (i = 0; i< numSurfacePt; i++){
+        for (j=0;j<4;j++){
+            bi_index1[i*4+j]=bi_index[i][j];
+        }
+    }
+    bubble(bi_index1,numSurfacePt*4); // put in order
+
+    // throw repeated index and find the length K
+    for (i = 1; i < numSurfacePt*4; i++)
     {
-        for(int n = 0 ; n < surface.numGridPtsY ; n = n + 1)
+        if (bi_index1[k] != bi_index1[i])
         {
-            surface_index = m * surface.numGridPtsY + n; //1km reoslution
-            if (surface.data[surface_index].bin_index >= 0){
-                H[surface.data[surface_index].bin_index] = surface.data[surface_index].total_dP;
-                ddm_convolveH_FFT(2);
+            bi_index1[k + 1] = bi_index1[i];
+            k++;  //index of the non-repeated array
+        }
+    }
+    int numPt_LL=k+1; //length of M (num of points on lat/lon) = K = numPt_LL
 
-                for (int k=startDoppelr_bin; k < (numDoppelrBins*resDoppelr_bins + startDoppelr_bin); k+=resDoppelr_bins) {
-                    for (int l=startDelay_bin; l < (numDelayBins*resDelay_bins + startDelay_bin); l+=resDelay_bins) {
-                        jacob->data[i].value = creal(H[DDMINDEX(k,l)]) ;
-                        i=i+1;
-                    }
+    int *indexLL = (int *)calloc(numPt_LL,sizeof(int));
+    for (i=0; i<numPt_LL; i++){
+        indexLL[i]=bi_index1[i];
+    }
+
+    //construct T matrix T: 144 x K
+    double **T; // T[144][K]interpolation transformation matrix: fill it with bi_weight[144][4]
+    T = (double**)malloc(sizeof(double*) * numSurfacePt);
+    for (i = 0; i < numSurfacePt; i++){
+        T[i] = (double*)malloc(sizeof(double)*numPt_LL);
+    }
+
+    //initialize T
+    for (i = 0; i<numSurfacePt; i++){
+        for(j = 0; j<numPt_LL; j++){
+            T[i][j]=0;
+        }
+    }
+    //fill T matrix
+    for (i = 0; i<numSurfacePt; i++){
+        for (j = 0; j<numPt_LL; j++){
+            for (k=0; k<4; k++){
+                if(bi_index[i][k]==indexLL[j]){
+                    T[i][j]=bi_weight[i][k];
                 }
-                _ddm_zero( H, width );
             }
         }
     }
-     */
+    /*
+    printf("%d %d %d %d\n", bi_index[0][0],bi_index[0][1],bi_index[0][2],bi_index[0][3]);
+    printf("%f %f %f %f\n", bi_weight[0][0],bi_weight[0][1],bi_weight[0][2],bi_weight[0][3]);
+    printf("%d %d %d %d\n", indexLL[0],indexLL[1],indexLL[2],indexLL[3]);
+    printf("%f %f %f %f\n", T[0][0],T[0][1],T[0][2],T[0][3]);
 
+    FILE *outp = fopen("T.dat", "wb");
+    for (i = 0;i < numSurfacePt;i++) {
+        for (j = 0; j < K; j++){
+            fwrite(&T[i][j], sizeof(double), 1, outp);
+        }
+    }
+    fclose(outp);
+
+    FILE *outp2 = fopen("bi_index.dat", "wb");
+    for (i = 0;i < numSurfacePt;i++) {
+        for (j = 0; j < 4; j++){
+            fwrite(&bi_index[i][j], sizeof(int), 1, outp2);
+        }
+    }
+    fclose(outp);
+    */
+
+    //matrix multiplication H_new[187][110] = H0[187][144] * T[144][110]
+    double **H_LL; //H matrix respect to lat/lon 187x110
+    H_LL = (double**)malloc(sizeof(double*) * numBins);//
+    for (i = 0; i < numBins; i++){//
+        H_LL[i] = (double*)malloc(sizeof(double)*numPt_LL);
+    }
+    for (i = 0; i < numBins; i++){
+        for (j = 0; j<numPt_LL; j++){
+            H_LL[i][j]=0;
+            for (k=0; k<numSurfacePt; k++){
+                H_LL[i][j] += H0[i][k] * T[k][j];
+            }
+        }
+    }
+
+    //save H_LL to jabob
+    for (i = 0; i < numBins; i++){
+        for (j = 0; j<numPt_LL; j++){
+            jacob->data[j*numBins+i].value = H_LL[i][j];
+            jacob->data[j*numBins+i].lat_deg = iwf.data[indexLL[j]].lat_deg;
+            jacob->data[j*numBins+i].lon_deg = iwf.data[indexLL[j]].lon_deg;
+        }
+    }
+    jacob->numDDMbins = numBins;
+    jacob->numSurfacePts = numPt_LL;
+
+    //free menmory
+    for (i = 0; i < numBins; ++i){
+        free(H0[i]); free(H_LL[i]);
+    }
+    free(H0); free(H_LL);
+    free(H0_lat_vec); free(H0_lon_vec); free(lat_vec); free(lon_vec);
+    free(bi_index1); free(indexLL);
+    for (i = 0; i < numSurfacePt; ++i){
+        free(bi_index[i]); free(bi_weight[i]); free(T[i]);
+    }
+    free(bi_index); free(bi_weight); free(T);
 }
 
 

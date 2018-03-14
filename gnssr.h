@@ -483,7 +483,7 @@ int DDM_avgCount;
 void ddm_initialize(struct metadata meta);
 void ddm_cleanup(void);
 
-void ddm_Hmatrix(struct metadata meta,  struct Jacobian *jacob);
+void ddm_Hmatrix(struct metadata meta, struct inputWindField iwf, struct Jacobian *jacob);
 void ddm_mapSurfaceToDDM(void);
 void ddm_mapRegionToDDM(void);
 void ddm_binSurface(void);
@@ -584,7 +584,9 @@ void image_createImageFromDouble( unsigned char **image, double *vals, unsigned 
 
 //******************************************************************************/
 // math.c prototypes
-
+void bubble(int *a,int n);
+void bilinear_interp(double *x_vec, double *y_vec, int size_x, int size_y, double x, double y, int *bi_index, double *bi_weight, double resolution);
+int find_nearest(double *vec, int size, double value);
 double linear_interp( double a, double b, int direction, double time_01 );
 void cubic_interpolation( double f0, double f1, double df0, double df1,
                           double t, double *ft, double *dft, double timeInterval_s);

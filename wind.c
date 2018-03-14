@@ -28,11 +28,6 @@
 
 #include "gnssr.h"
 
-//prototypes only used within wind.c
-int find_nearest(double *vec, int size, double value);
-
-/****************************************************************************/
-
 void wind_interpolate(windField *wf,struct Geometry geom, struct inputWindField iwf, double grid_resolution){
     //interpolate from iwf.data[] to wf.data[]
     printf("Interpolate wind field into surface frame\n");
@@ -109,7 +104,7 @@ void wind_interpolate(windField *wf,struct Geometry geom, struct inputWindField 
 
     double *lon_vec, *lat_vec;
     lon_vec = (double *)calloc(iwf.numPtsLon,sizeof(double));
-    lat_vec = (double *)calloc(iwf.numPtsLon,sizeof(double));
+    lat_vec = (double *)calloc(iwf.numPtsLat,sizeof(double));
     for (int i = 0; i < iwf.numPtsLon; i++){
         lon_vec[i] = iwf.lon_min_deg + i*iwf.resolution_lon_deg-360;   //-180 ~ 180
     }
@@ -117,6 +112,31 @@ void wind_interpolate(windField *wf,struct Geometry geom, struct inputWindField 
         lat_vec[i] = iwf.lat_min_deg + i*iwf.resolution_lat_deg;
     }
 
+    //bilinear interpolation
+    int bi_index[4];
+    double bi_weight[4];
+    for (int i = 0; i<numPts; i++){
+        bilinear_interp(lat_vec, lon_vec, iwf.numPtsLat, iwf.numPtsLon,
+                        PUT_LAT[i], PUT_LON[i], bi_index, bi_weight, fabs(iwf.resolution_lat_deg));
+        wf->data[i].windSpeed_U10_ms = bi_weight[0]*iwf.data[bi_index[0]].windSpeed_U10_ms
+                                       +bi_weight[1]*iwf.data[bi_index[1]].windSpeed_U10_ms
+                                       +bi_weight[2]*iwf.data[bi_index[2]].windSpeed_U10_ms
+                                       +bi_weight[3]*iwf.data[bi_index[3]].windSpeed_U10_ms;
+        wf->data[i].windSpeed_V10_ms = bi_weight[0]*iwf.data[bi_index[0]].windSpeed_V10_ms
+                                       +bi_weight[1]*iwf.data[bi_index[1]].windSpeed_V10_ms
+                                       +bi_weight[2]*iwf.data[bi_index[2]].windSpeed_V10_ms
+                                       +bi_weight[3]*iwf.data[bi_index[3]].windSpeed_V10_ms;
+        wf->data[i].freezingHeight_m = bi_weight[0]*iwf.data[bi_index[0]].freezingHeight_m
+                                       +bi_weight[1]*iwf.data[bi_index[1]].freezingHeight_m
+                                       +bi_weight[2]*iwf.data[bi_index[2]].freezingHeight_m
+                                       +bi_weight[3]*iwf.data[bi_index[3]].freezingHeight_m;
+        wf->data[i].rainRate_mmhr = bi_weight[0]*iwf.data[bi_index[0]].rainRate_mmhr
+                                    +bi_weight[1]*iwf.data[bi_index[1]].rainRate_mmhr
+                                    +bi_weight[2]*iwf.data[bi_index[2]].rainRate_mmhr
+                                    +bi_weight[3]*iwf.data[bi_index[3]].rainRate_mmhr;
+    }
+
+    /* nearest interpoation
     int ind_lat, ind_lon;
     for (int i = 0; i < numPts; i++){
         ind_lat = find_nearest(lat_vec, iwf.numPtsLat, PUT_LAT[i]);
@@ -126,11 +146,8 @@ void wind_interpolate(windField *wf,struct Geometry geom, struct inputWindField 
         wf->data[i].windSpeed_V10_ms = iwf.data[positions[i]].windSpeed_V10_ms;
         wf->data[i].freezingHeight_m = iwf.data[positions[i]].freezingHeight_m;
         wf->data[i].rainRate_mmhr = iwf.data[positions[i]].rainRate_mmhr;
-        //if (i<10){
-        //    printf("index lat = %d\n",ind_lat);
-        //    printf("index lon = %d\n",ind_lon);
-        //}
     }
+     */
     //all checked, correct!
 
     free(PUTx);free(PUTy);free(PUTz);
@@ -155,23 +172,6 @@ void wind_interpolate(windField *wf,struct Geometry geom, struct inputWindField 
 
 }
 
-int find_nearest(double *vec, int size, double value){
-    //find the nearest value in vec[] and return the index
-    double diff, temp_diff;
-    int index;
-
-    index = 0;
-    diff = fabs(vec[0]-value);
-    for (int i = 0;i < size; i++){
-        temp_diff = fabs(vec[i] - value);
-        if (temp_diff < diff){
-            diff = temp_diff;
-            index = i;
-        }
-    }
-    return index;
-
-}
 void wind_initialize(windField *wf, struct metadata meta, struct Geometry geom, struct inputWindField iwf){
     wf->numGridPtsX   = meta.numGridPoints[0];	//120
     wf->numGridPtsY   = meta.numGridPoints[1];   //120

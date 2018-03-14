@@ -39,7 +39,10 @@ void forwardModel(struct metadata meta, struct powerParm pp, struct inputWindFie
     ddm_mag(); //save to DDM[i];
 
     ddm_save(meta,ddm_fm,1);  //save to structure ddm_fm
-    ddm_Hmatrix(meta,jacob);  //save to structure jacob
+    ddm_Hmatrix(meta, iwf, jacob);  //save to structure jacob
 
+    //surface_saveWindToFile();
+    //surface_saveDopplerToFile();
+    //surface_saveDelayToFile();
 }
 
