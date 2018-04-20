@@ -5,20 +5,28 @@
 #include "forwardmodel.h"
 #include "complex.h"
 
-void DDMfm_saveToFile(struct DDMfm ddm_fm) {
+void DDMfm_saveToFile(struct DDMfm ddm_fm, int index, int pathType) {
 
     double val;
-    complex double valc;
+    char filename[50];
 
     FILE *outp;
-    outp = fopen("DDMfm.dat", "wb");
+    switch(pathType){
+        case 0:
+            outp = fopen("DDMfm.dat","wb");
+            break;
+        case 1:
+            sprintf(filename, "DDMfm/DDMfm%d.dat", index);
+            outp = fopen(filename, "wb");
+            break;
+    }
 
     for (int i = 0; i < ddm_fm.numDelaybins * ddm_fm.numDopplerbins; i++) {
         val = ddm_fm.data[i].power;
         fwrite(&val, 1, sizeof(double), outp);
     }
     fclose(outp);
-    printf("save DDM into file\n");
+    printf("save FM DDM into file\n");
 }
 
 void Jacobian_saveToFile(struct Jacobian jacob){

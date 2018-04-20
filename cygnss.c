@@ -54,8 +54,11 @@ void readL1data(char L1dataFilename[], int sampleIndex, int ddm_index, struct CY
     l1data->sc_att_rad[2] = readnc_float_1d(ncid, "sc_yaw", sampleIndex);
 
     l1data->utc_sec = readnc_int_1d(ncid, "ddm_timestamp_utc", sampleIndex);
-    l1data->ddm_delay_row = readnc_int_2d(ncid, "brcs_ddm_peak_bin_delay_row", sampleIndex, ddm_index);
-    l1data->ddm_dopp_col = readnc_int_2d(ncid, "brcs_ddm_peak_bin_dopp_col", sampleIndex, ddm_index);
+    l1data->quality_flags = readnc_int_2d(ncid, "quality_flags", sampleIndex, ddm_index);
+    l1data->ddm_peak_delay_row = readnc_int_2d(ncid, "brcs_ddm_peak_bin_delay_row", sampleIndex, ddm_index);
+    l1data->ddm_peak_dopp_col = readnc_int_2d(ncid, "brcs_ddm_peak_bin_dopp_col", sampleIndex, ddm_index);
+    l1data->ddm_sp_delay_row = readnc_float_2d(ncid, "brcs_ddm_sp_bin_delay_row", sampleIndex, ddm_index);
+    l1data->ddm_sp_dopp_col = readnc_float_2d(ncid, "brcs_ddm_sp_bin_dopp_col", sampleIndex, ddm_index);
     l1data->index = sampleIndex;
     l1data->spNum = ddm_index;
     l1data->prn_code = readnc_int_2d(ncid, "prn_code", sampleIndex, ddm_index);
@@ -118,12 +121,21 @@ float readnc_float_2d(int ncid, char varName[], int index, int ddm_index){
     return var;
 }
 
-void DDMobs_saveToFile(struct CYGNSSL1 l1data) {
+void DDMobs_saveToFile(struct CYGNSSL1 l1data, int index, int pathType) {
 
     double val;
+    char filename[50];
 
     FILE *outp;
-    outp = fopen("DDMobs.dat", "wb");
+    switch(pathType){
+        case 0:
+            outp = fopen("DDMobs.dat","wb");
+            break;
+        case 1:
+            sprintf(filename, "DDMobs/DDMobs%d.dat", index);
+            outp = fopen(filename, "wb");
+            break;
+    }
 
     for (int i = 0; i < 11 ; i++) {
         for (int j = 0; j < 17 ; j++){

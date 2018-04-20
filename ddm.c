@@ -44,7 +44,7 @@ void ddm_initialize(struct metadata meta) {
     // reads DDM parameters from the configuration file into global struct
     ddm.numDelayBins         = meta.numDelaybins;
     ddm.numDoppBins          = meta.numDopplerbins;
-    ddm.delayOffset_bins     = meta.specular_delayBinIdx; //
+    ddm.delayOffset_bins     = meta.specular_delayBinIdx;
     ddm.dopplerOffset_bins   = meta.specular_dopplerBinIdx;
     ddm.dopplerRes_Hz        = meta.dopplerRes_Hz;
     ddm.delayRes_chips       = meta.delayRez_chips;
@@ -113,8 +113,11 @@ void ddm_binSurface(void) {
     int delayBin,dopplerBin;
     for(int i=0; i<surface.numGridPts; i++) {
 
-        delayBin   = (int)floor(surface.data[i].delay_s * ddm.chipsPerSec / ddm.delayRes_chips) + ddm.delayOffset_bins;
-        dopplerBin = (int)floor(surface.data[i].doppler_Hz/ddm.dopplerRes_Hz) + ddm.dopplerOffset_bins;
+        //delayBin   = (int)floor(surface.data[i].delay_s * ddm.chipsPerSec / ddm.delayRes_chips) + ddm.delayOffset_bins;
+        //dopplerBin = (int)floor(surface.data[i].doppler_Hz/ddm.dopplerRes_Hz) + ddm.dopplerOffset_bins;
+
+        delayBin   = (int)(round(surface.data[i].delay_s * ddm.chipsPerSec / ddm.delayRes_chips) + ddm.delayOffset_bins);
+        dopplerBin = (int)(round(surface.data[i].doppler_Hz/ddm.dopplerRes_Hz) + ddm.dopplerOffset_bins);
 
         if((dopplerBin < ddm.numDoppBins) && (dopplerBin >= 0) &&
            (delayBin < ddm.numDelayBins) && (delayBin >= 0 )) {
@@ -457,8 +460,8 @@ void ddm_initAmbFuncBuffers(void ) {
     // called from ddm_initialize
 
     // generate amb func and align it to first bin, store a copy in temp buffer
-    ddm_genAmbFunc();
-    ddm_fftshift();
+    ddm_genAmbFunc();  //computer ambiguity function values for each delay/Doppler bin and store in DDM[]
+    ddm_fftshift();   //circular shift DDM[] in delay and Doppler dimension (why?)
     for(int i = 0; i<ddm.numBins; i++) {  DDM_temp[i] = DDM[i]; }
 
     // save FFT'd version in DDM_amb buffer
@@ -471,8 +474,8 @@ void ddm_initAmbFuncBuffers(void ) {
     // take mag squared, FFT it, and save it in DDM_amb2 buffer
     for(int i = 0; i<ddm.numBins; i++) {  DDM[i] = DDM_temp[i]; }
     ddm_magSqr();
-    ddm_fft();
-    for(int i = 0; i<ddm.numBins; i++) {  DDM_amb2[i] = DDM[i]; }
+    ddm_fft(); // why?
+    for(int i = 0; i<ddm.numBins; i++) {  DDM_amb2[i] = DDM[i]; }  //use this one
 
     // reset DDM buffer to zero when we are done
     _ddm_zero( DDM, ddm.numBins );

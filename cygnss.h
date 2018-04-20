@@ -10,6 +10,7 @@
 
 struct CYGNSSL1
 {
+    int quality_flags;
     int utc_sec;
     int sc_num;  //1-8
     int index; //index of measurement of the day
@@ -21,8 +22,11 @@ struct CYGNSSL1
     double gps_eirp_watt;
     double noise_figue;
 
-    int ddm_delay_row;
-    int ddm_dopp_col;
+    int ddm_peak_delay_row;
+    int ddm_peak_dopp_col;
+    double ddm_sp_delay_row;
+    double ddm_sp_dopp_col;
+
 
     double rx_position_ecef_m[3];
     double rx_velocity_ecef_ms[3];
@@ -42,6 +46,6 @@ int readnc_int_2d(int ncid, char varName[], int index, int spNum);
 float readnc_float_1d(int ncid, char varName[], int index);
 float readnc_float_2d(int ncid, char varName[], int index, int ddm_index);
 
-void DDMobs_saveToFile(struct CYGNSSL1 l1data);
+void DDMobs_saveToFile(struct CYGNSSL1 l1data, int index, int pathType);
 
 #endif //CFORWARDMODEL_CYGNSS_H

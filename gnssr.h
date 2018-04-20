@@ -448,8 +448,7 @@ struct
 {
     int numDelayBins, numDoppBins, numBins;
     double dopplerRes_Hz, delayRes_chips;
-    int delayOffset_bins, dopplerOffset_bins;
-    //double doppBin;
+    double delayOffset_bins, dopplerOffset_bins;
     double chipsPerSec;
     double refPower_dB;
     fftw_plan FFTWPLAN,IFFTWPLAN;

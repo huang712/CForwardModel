@@ -18,8 +18,8 @@ struct metadata
     double dopplerRes_Hz;
 
     //specularBin
-    int specular_delayBinIdx;
-    int specular_dopplerBinIdx;
+    double specular_delayBinIdx;
+    double specular_dopplerBinIdx;
 
     //downsampled DDM
     int resample_startBin[2];
@@ -39,7 +39,7 @@ struct metadata
 
     int utc_sec;
     int prn_code;
-    int meas_ddm_sp_index[2];
+    double meas_ddm_sp_index[2];
 };
 
 
@@ -138,7 +138,7 @@ void init_Jacobian(struct Jacobian *jacob);
 char* getRxAntenna(int sc_num, int ddm_ant);
 
 //saveFile.c : file saving functions (for debug)
-void DDMfm_saveToFile(struct DDMfm ddm_fm);
+void DDMfm_saveToFile(struct DDMfm ddm_fm, int index, int pathType);
 void Jacobian_saveToFile(struct Jacobian jacob);
 
 #endif //CFORWARDMODEL_INPUTOUPUT_H

@@ -13,8 +13,8 @@
 
 void init_metadata(struct CYGNSSL1 l1data, struct metadata *meta) {
     //read from CYGNSS data
-    meta->meas_ddm_sp_index[0] = l1data.ddm_delay_row;
-    meta->meas_ddm_sp_index[1] = l1data.ddm_dopp_col;
+    meta->meas_ddm_sp_index[0] = l1data.ddm_sp_delay_row;
+    meta->meas_ddm_sp_index[1] = l1data.ddm_sp_dopp_col;
 
     //default numbers
     meta->numDelaybins = 400;
@@ -27,8 +27,8 @@ void init_metadata(struct CYGNSSL1 l1data, struct metadata *meta) {
     meta->resample_resolution_bins[1] = 20;
     meta->resample_numBins[0] = 17;
     meta->resample_numBins[1] = 11;
-    meta->specular_delayBinIdx = (meta->meas_ddm_sp_index[0]-1) * meta->resample_resolution_bins[0]; //30 for 7
-    meta->specular_dopplerBinIdx = 200;
+    meta->specular_delayBinIdx = (meta->meas_ddm_sp_index[0]) * meta->resample_resolution_bins[0];
+    meta->specular_dopplerBinIdx = meta->resample_startBin[1] + meta->resample_resolution_bins[1] * meta->meas_ddm_sp_index[1];
 
     meta->temp_K = l1data.ant_temperature_cels+273.15;
     meta->noiseFigure_dB = l1data.noise_figue;
@@ -47,7 +47,7 @@ void init_metadata(struct CYGNSSL1 l1data, struct metadata *meta) {
 void init_powerParm(struct CYGNSSL1 l1data, struct powerParm *pp){
     pp->Rx_antennaGain_dB = 0;
     pp->Tx_antennaGain_dB = 0;
-    pp->AntennaType = 0;
+    pp->AntennaType = 0;  //0 for antenna file, 1 for isotropic
     pp->Tx_Power_dB = 10 * log10(l1data.gps_eirp_watt);
     pp->AtmosphericLoss_dB = 0.0;
     pp->Rx_upsamplingFactor = 10;
@@ -192,9 +192,9 @@ void init_inputWindField_synoptic(char windFileName[], struct inputWindField *iw
     ERR(retval);
 
     /* Get the varids of the latitude and longitude coordinate variables. */
-    if ((retval = nc_inq_varid(ncid, "lat_0", &lat_varid)))  //lat_varid = 0;
+    if ((retval = nc_inq_varid(ncid, "latitude", &lat_varid)))  //lat_0  "latitude"
     ERR(retval);
-    if ((retval = nc_inq_varid(ncid, "lon_0", &lon_varid)))
+    if ((retval = nc_inq_varid(ncid, "longitude", &lon_varid)))  //lon_0  "longitude"
     ERR(retval);
 
     /* Read the coordinate variable data. */
@@ -204,9 +204,9 @@ void init_inputWindField_synoptic(char windFileName[], struct inputWindField *iw
     ERR(retval);
 
     /* Get the varids of the U and V variables. */
-    if ((retval = nc_inq_varid(ncid, "UGRD_P0_L103_GLL0", &U10_varid)))
+    if ((retval = nc_inq_varid(ncid, "UGRD_10maboveground", &U10_varid)))   //UGRD_P0_L103_GLL0  "UGRD_10maboveground"
     ERR(retval);
-    if ((retval = nc_inq_varid(ncid, "VGRD_P0_L103_GLL0", &V10_varid)))
+    if ((retval = nc_inq_varid(ncid, "VGRD_10maboveground", &V10_varid)))  //VGRD_P0_L103_GLL0   "UGRD_10maboveground"
     ERR(retval)
 
     //read U10 and V10 data   [Nlat][Nlon]
@@ -224,7 +224,7 @@ void init_inputWindField_synoptic(char windFileName[], struct inputWindField *iw
     iwf->lat_max_deg = lats[NLAT-1];
     iwf->lon_min_deg = lons[0];
     iwf->lon_max_deg = lons[NLON-1];
-    iwf->resolution_lat_deg = -0.125;
+    iwf->resolution_lat_deg = 0.125;   //sometimes this is -0.125
     iwf->resolution_lon_deg = 0.125;
     iwf->data = (struct inputWindFieldPixel *)calloc(iwf->numPts,sizeof(struct inputWindFieldPixel));
 
@@ -258,8 +258,8 @@ void init_Geometry(struct CYGNSSL1 l1data, struct Geometry *geom){
 void init_DDM(struct CYGNSSL1 l1data, struct DDMfm *ddm_fm){
     ddm_fm->numDelaybins = 17;
     ddm_fm->numDopplerbins = 11;
-    ddm_fm->delay_min_chip = l1data.ddm_delay_row * (-0.25);
-    ddm_fm->delay_max_chip = (17-1-l1data.ddm_delay_row) * 0.25;
+    ddm_fm->delay_min_chip = l1data.ddm_sp_delay_row * (-0.25);
+    ddm_fm->delay_max_chip = (17-1-l1data.ddm_sp_delay_row) * 0.25;
     ddm_fm->Doppler_min_Hz = -2500;
     ddm_fm->Doppler_max_Hz = 2500;
     ddm_fm->delay_resolution_chip = 0.25;
