@@ -300,9 +300,9 @@ char* getRxAntenna(int sc_num, int ddm_ant){
                 case 0:
                     printf("No antenna\n");break;
                 case 2:
-                    filename = "../../Data/All_E2ES_antennas/Rx1_starborad_E2ES_v4.bin"; break;
+                    filename = "../../Data/All_E2ES_antennas/V6/Rx1_starborad_E2ES_v6.bin"; break;
                 case 3:
-                    filename = "../../Data/All_E2ES_antennas/Rx1_port_E2ES_v4.bin"; break;
+                    filename = "../../Data/All_E2ES_antennas/V6/Rx1_port_E2ES_v6.bin"; break;
             }
             break;
         case 2:
@@ -310,9 +310,9 @@ char* getRxAntenna(int sc_num, int ddm_ant){
                 case 0:
                     printf("No antenna\n");break;
                 case 2:
-                    filename = "../../Data/All_E2ES_antennas/Rx2_starborad_E2ES_v4.bin"; break;
+                    filename = "../../Data/All_E2ES_antennas/V6/Rx2_starborad_E2ES_v6.bin"; break;
                 case 3:
-                    filename = "../../Data/All_E2ES_antennas/Rx2_port_E2ES_v4.bin"; break;
+                    filename = "../../Data/All_E2ES_antennas/V6/Rx2_port_E2ES_v6.bin"; break;
             }
             break;
         case 3:
@@ -320,9 +320,9 @@ char* getRxAntenna(int sc_num, int ddm_ant){
                 case 0:
                     printf("No antenna\n");break;
                 case 2:
-                    filename = "../../Data/All_E2ES_antennas/Rx3_starborad_E2ES_v4.bin"; break;
+                    filename = "../../Data/All_E2ES_antennas/V6/Rx3_starborad_E2ES_v6.bin"; break;
                 case 3:
-                    filename = "../../Data/All_E2ES_antennas/Rx3_port_E2ES_v4.bin"; break;
+                    filename = "../../Data/All_E2ES_antennas/V6/Rx3_port_E2ES_v6.bin"; break;
             }
             break;
         case 4:
@@ -330,9 +330,9 @@ char* getRxAntenna(int sc_num, int ddm_ant){
                 case 0:
                     printf("No antenna\n");break;
                 case 2:
-                    filename = "../../Data/All_E2ES_antennas/Rx4_starborad_E2ES_v4.bin"; break;
+                    filename = "../../Data/All_E2ES_antennas/V6/Rx4_starborad_E2ES_v6.bin"; break;
                 case 3:
-                    filename = "../../Data/All_E2ES_antennas/Rx4_port_E2ES_v4.bin"; break;
+                    filename = "../../Data/All_E2ES_antennas/V6/Rx4_port_E2ES_v6.bin"; break;
             }
             break;
         case 5:
@@ -340,9 +340,9 @@ char* getRxAntenna(int sc_num, int ddm_ant){
                 case 0:
                     printf("No antenna\n");break;
                 case 2:
-                    filename = "../../Data/All_E2ES_antennas/Rx5_starborad_E2ES_v4.bin"; break;
+                    filename = "../../Data/All_E2ES_antennas/V6/Rx5_starborad_E2ES_v6.bin"; break;
                 case 3:
-                    filename = "../../Data/All_E2ES_antennas/Rx5_port_E2ES_v4.bin"; break;
+                    filename = "../../Data/All_E2ES_antennas/V6/Rx5_port_E2ES_v6.bin"; break;
             }
             break;
         case 6:
@@ -350,9 +350,9 @@ char* getRxAntenna(int sc_num, int ddm_ant){
                 case 0:
                     printf("No antenna\n");break;
                 case 2:
-                    filename = "../../Data/All_E2ES_antennas/Rx6_starborad_E2ES_v4.bin"; break;
+                    filename = "../../Data/All_E2ES_antennas/V6/Rx6_starborad_E2ES_v6.bin"; break;
                 case 3:
-                    filename = "../../Data/All_E2ES_antennas/Rx6_port_E2ES_v4.bin"; break;
+                    filename = "../../Data/All_E2ES_antennas/V6/Rx6_port_E2ES_v6.bin"; break;
             }
             break;
         case 7:
@@ -360,9 +360,9 @@ char* getRxAntenna(int sc_num, int ddm_ant){
                 case 0:
                     printf("No antenna\n");break;
                 case 2:
-                    filename = "../../Data/All_E2ES_antennas/Rx7_starborad_E2ES_v4.bin"; break;
+                    filename = "../../Data/All_E2ES_antennas/V6/Rx7_starborad_E2ES_v6.bin"; break;
                 case 3:
-                    filename = "../../Data/All_E2ES_antennas/Rx7_port_E2ES_v4.bin"; break;
+                    filename = "../../Data/All_E2ES_antennas/V6/Rx7_port_E2ES_v6.bin"; break;
             }
             break;
         case 8:
@@ -370,9 +370,9 @@ char* getRxAntenna(int sc_num, int ddm_ant){
                 case 0:
                     printf("No antenna\n");break;
                 case 2:
-                    filename = "../../Data/All_E2ES_antennas/Rx8_starborad_E2ES_v4.bin"; break;
+                    filename = "../../Data/All_E2ES_antennas/V6/Rx8_starborad_E2ES_v6.bin"; break;
                 case 3:
-                    filename = "../../Data/All_E2ES_antennas/Rx8_port_E2ES_v4.bin"; break;
+                    filename = "../../Data/All_E2ES_antennas/V6/Rx8_port_E2ES_v6.bin"; break;
             }
             break;
     }
