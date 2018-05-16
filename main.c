@@ -7,10 +7,7 @@ void Process_DDM(char L1dataFilename[], int sampleIndex, int ddmIndex, int pathT
 
 int main() {
     char L1dataFilename[1000] = "../../Data/CYGNSSL1/cyg04.ddmi.s20170904-000000-e20170904-235959.l1.power-brcs.a20.d20.nc";
-    Process_DDM(L1dataFilename, 80928, 0, 0);
-
-    //char L1dataFilename[1000] = "../../Data/CYGNSSL1/cyg06.ddmi.s20170904-000000-e20170904-235959.l1.power-brcs.a20.d20.nc";
-    //Process_DDM(L1dataFilename, 30613, 3); //30613 30619 30700
+    Process_DDM(L1dataFilename, 81095, 0, 0);
 
     //for (int index = 80928; index < 81111; index++){   //80981-81111
     //    Process_DDM(L1dataFilename, index, 0, 1);
@@ -56,7 +53,6 @@ void Process_DDM(char L1dataFilename[], int sampleIndex, int ddmIndex, int pathT
     end =clock();
     printf("Forward model running time: %f seconds\n", (end-start)/CLOCKS_PER_SEC);
 
-    //int pathType = 1; //0 to save in defaut path; 1 to save in folder
     DDMobs_saveToFile(l1data, sampleIndex,pathType);
     DDMfm_saveToFile(ddm_fm, sampleIndex,pathType);
     //Jacobian_saveToFile(jacob);

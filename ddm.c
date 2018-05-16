@@ -81,7 +81,8 @@ void ddm_initialize(struct metadata meta) {
 
 
     // precalculate and store the ambiguity function
-    ddm_initAmbFuncBuffers();
+    ddm_initACF();
+    ddm_initAmbFuncBuffers(meta.prn_code);
 
     // calculate the thermal noise power
     ddm_initThermalNoise(meta);
@@ -456,11 +457,25 @@ void circshift(DDMtype *out, const DDMtype *in, int xdim, int ydim, int xshift, 
 //  based on eqns (20) and (21) [Zavorotny & Voronovich 2000]
 /****************************************************************************/
 
-void ddm_initAmbFuncBuffers(void ) {
+void ddm_initACF(void){
+    //added by Feixiong
+    // load PRN ACF matrix
+    FILE *file;
+    char *ACF_filename = "../../Data/PRN_ACF.bin";
+    file = fopen(ACF_filename,"rb");
+    if (file == NULL){
+        printf("fail to open PRN ACF file\n");
+        exit(1);
+    }
+    fread(PRN_ACF,sizeof(double),32736,file);
+    fclose(file);
+}
+
+void ddm_initAmbFuncBuffers(int prn_code) {
     // called from ddm_initialize
 
     // generate amb func and align it to first bin, store a copy in temp buffer
-    ddm_genAmbFunc();  //computer ambiguity function values for each delay/Doppler bin and store in DDM[]
+    ddm_genAmbFunc(prn_code);  //computer ambiguity function values for each delay/Doppler bin and store in DDM[]
     ddm_fftshift();   //circular shift DDM[] in delay and Doppler dimension (why?)
     for(int i = 0; i<ddm.numBins; i++) {  DDM_temp[i] = DDM[i]; }
 
@@ -481,7 +496,7 @@ void ddm_initAmbFuncBuffers(void ) {
     _ddm_zero( DDM, ddm.numBins );
 }
 
-void ddm_genAmbFunc(void){
+void ddm_genAmbFunc(int prn_code){
     // generate (non-squared) amb func. centered in DDM buffer
     double dtau_s, dfreq_Hz;
 
@@ -490,18 +505,38 @@ void ddm_genAmbFunc(void){
     int centerDelayBin   = (int) floor(ddm.numDelayBins/2); //200
     int centerDopplerBin = (int) floor(ddm.numDoppBins/2);  //200
 
-    for (int l=0; l < ddm.numDelayBins; l++) {
-        dtau_s =  (l - centerDelayBin) * ddm.delayRes_chips * tauChip_s;
+    for (int l=0; l < ddm.numDelayBins; l++) {  //l=0:399
+        dtau_s =  (l - centerDelayBin) * ddm.delayRes_chips * tauChip_s; //(l-200)*0.05*tauChip_s
         for (int k=0; k < ddm.numDoppBins; k++) {
             dfreq_Hz = (k - centerDopplerBin) * ddm.dopplerRes_Hz;
-            DDM[DDMINDEX(k,l)] = lambda(dtau_s,tauChip_s,cohIntTime_s) * S(dfreq_Hz,cohIntTime_s);
+            //DDM[DDMINDEX(k,l)] = lambda(dtau_s,tauChip_s,cohIntTime_s) * S(dfreq_Hz,cohIntTime_s);
+            DDM[DDMINDEX(k,l)] = lambda_prn(prn_code, dtau_s,tauChip_s,cohIntTime_s) * S(dfreq_Hz,cohIntTime_s);
         }
     }
 }
 
-double lambda( double dtau_s, double tauChip_s, double cohIntTime_s ) { //perfect triangle
+double lambda( double dtau_s, double tauChip_s, double cohIntTime_s ) {
+    //perfect trianglular on ZV paper
     return (fabs(dtau_s) <= (tauChip_s*(1+tauChip_s/cohIntTime_s))) ?
            (1 - fabs(dtau_s)/tauChip_s) : -tauChip_s/cohIntTime_s;
+}
+
+double lambda_prn(int prn_code, double dtau_s, double tauChip_s, double cohIntTime_s ){
+    //ACF for each PRN
+    double bin;
+    int bin0, bin1;
+    double ACF, ACF0, ACF1;
+
+    bin = dtau_s/tauChip_s; //-10chips to 9.95chips
+    bin0 = (int)floor(bin);
+    bin1 = (int)floor(bin)+1;
+    ACF0 = PRN_ACF[1023*(prn_code-1)+511+bin0];
+    ACF1 = PRN_ACF[1023*(prn_code-1)+511+bin1];
+    ACF = (bin1-bin)*ACF0+(bin-bin0)*ACF1; //linear interpolation
+
+    return ACF;
+    //printf("%f %f %f \n",ACF,ACF0, ACF1);
+
 }
 
 complex double S(double dfreq_Hz, double cohIntTime_s) {

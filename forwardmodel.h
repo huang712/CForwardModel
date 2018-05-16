@@ -40,6 +40,7 @@ struct metadata
     int utc_sec;
     int prn_code;
     double meas_ddm_sp_index[2];
+
 };
 
 

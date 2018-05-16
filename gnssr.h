@@ -476,6 +476,7 @@ int DDM_avgCount;
 
 #define DDMINDEX(DOPPLERBINIDX,DELAYBINIDX) DOPPLERBINIDX * ddm.numDelayBins + DELAYBINIDX
 
+double PRN_ACF[32736]; // PRN aotocorrelation matrix
 
 // ddm.c prototypes
 
@@ -499,9 +500,11 @@ void ddm_h_ifft(void);
 void ddm_fftshift(void);
 void circshift(DDMtype *out, const DDMtype *in, int xdim, int ydim, int xshift, int yshift);
 
-void ddm_genAmbFunc(void);
-void ddm_initAmbFuncBuffers(void);
+void ddm_initACF(void);
+void ddm_genAmbFunc(int prn_code);
+void ddm_initAmbFuncBuffers(int prn_code);
 double lambda( double tau_s, double tauChip_s, double cohIntTime_s );
+double lambda_prn(int prn_code, double tau_s, double tauChip_s, double cohIntTime_s );
 complex double S(double dfreq_Hz, double cohIntTime_s);
 
 void ddm_save(struct metadata meta, struct DDMfm *ddm_fm, int realOrComplex);
