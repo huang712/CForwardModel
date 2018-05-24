@@ -27,6 +27,22 @@
 
 
 #include "gnssr.h"
+void ddmaLUT_initialize(void){
+    //added by Feixiong
+    //load DDMA LUT from CYGNSS
+    //ws = 0.05:0.1:69.95
+    //theta = 1:90
+    FILE *file;
+    char *filename = "../../Data/ddmaLUTv11.bin";
+    file = fopen(filename,"rb");
+    if (file == NULL){
+        printf("fail to open ddmaLUT file\n");
+        exit(1);
+    }
+    fread(ddmaLUT,sizeof(double),63000,file);
+
+    fclose(file);
+}
 
 void wind_interpolate(windField *wf,struct Geometry geom, struct inputWindField iwf, double grid_resolution){
     //interpolate from iwf.data[] to wf.data[]

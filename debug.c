@@ -17,6 +17,10 @@ void printfGeometry(geometryData orbitGeometry){
     printf("%f   ",orbitGeometry.g[0].sx_pos_ecef[1]);
     printf("%f   ",orbitGeometry.g[0].sx_pos_ecef[2]);
     printf("\n");
+    //printf("sx_vel = %f   ",orbitGeometry.g[0].sx_vel_ecef[0]);
+    //printf("%f   ",orbitGeometry.g[0].sx_vel_ecef[1]);
+    //printf("%f   ",orbitGeometry.g[0].sx_vel_ecef[2]);
+    //printf("\n");
 }
 
 /*

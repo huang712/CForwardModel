@@ -81,7 +81,7 @@ void geom_initialize(geometryData *gd, struct Geometry geom){	//read geometry in
         gd->g[i].sx_pos_ecef[1] = geom.sp_position_ecef_m[1];
         gd->g[i].sx_pos_ecef[2] = geom.sp_position_ecef_m[2];
 
-        geom_propagateGeometry( &(gd->g[i]), time_s, dist_km );
+        //geom_propagateGeometry( &(gd->g[i]), time_s, dist_km );
         geom_calculateSecondaryGeometry(&(gd->g[i]));	//solve specular point; convert ECEF to specular frame; compute sx_pos, RX, TX, Dopper, Delay
     }
 
@@ -140,7 +140,7 @@ void geom_calculateSecondaryGeometry( orbitGeometryStruct *g ){
     // propagate satellites forward in time to solve for specular point velocity
     double tempRx[3],tempTx[3],tempSx[3],tempSxLLH[3];
     double timeInc_s = 1;
-    for(int i=0;i<3;i++){
+    for(int i=0;i<3;i++){ //Tx and Rx pos at next time
         tempRx[i] = g->rx_pos_ecef[i] + g->rx_vel_ecef[i] * timeInc_s;
         tempTx[i] = g->tx_pos_ecef[i] + g->tx_vel_ecef[i] * timeInc_s;
     }

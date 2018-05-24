@@ -7,7 +7,8 @@ void Process_DDM(char L1dataFilename[], int sampleIndex, int ddmIndex, int pathT
 
 int main() {
     char L1dataFilename[1000] = "../../Data/CYGNSSL1/cyg04.ddmi.s20170904-000000-e20170904-235959.l1.power-brcs.a20.d20.nc";
-    Process_DDM(L1dataFilename, 81095, 0, 0);
+
+    Process_DDM(L1dataFilename, 81070, 0, 0);
 
     //for (int index = 80928; index < 81111; index++){   //80981-81111
     //    Process_DDM(L1dataFilename, index, 0, 1);
@@ -20,6 +21,7 @@ void Process_DDM(char L1dataFilename[], int sampleIndex, int ddmIndex, int pathT
     struct CYGNSSL1 l1data;
     readL1data(L1dataFilename, sampleIndex, ddmIndex, &l1data);
     if(l1data.quality_flags != 0) return; //skip data of quality issue
+
     //l1data.ddm_sp_delay_row = l1data.ddm_sp_delay_row-0.5;
     printf("sampleIndex = %d, quality_flags = %d\n", sampleIndex, l1data.quality_flags);
     printf("GPS PRN = %d\n", l1data.prn_code);

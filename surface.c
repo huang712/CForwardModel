@@ -181,7 +181,7 @@ void surface_calcGeomOverSurface(orbitGeometryStruct *geometry, int surfType, st
 
             // scattering vector and incidence angle
             surface_getScatteringVector(TSx_unit, RSx_unit, PUT, q_vec);// get q_vec
-            sxangle_rad = acos(-vector_dot_product(TSx_unit,RSx_unit))/2;
+            sxangle_rad = acos(vector_dot_product(TSx_unit,RSx_unit))/2; //incidence angle, corrected by Feixiong
 
             int useOldAntennaAngles = 0;
 
@@ -353,7 +353,7 @@ void surface_calcSigma0OnSurface(int windModelType){	//compute RCS at surface (6
         mss_x    = surface.windData[idx].mss_x;
         mss_y    = surface.windData[idx].mss_y;
         mss_b    = surface.windData[idx].mss_b;
-        sxangle  = surface.data[idx].sx_angle_rad;
+        sxangle  = surface.data[idx].sx_angle_rad;  //incidence angle
         q_vec[0] = surface.data[idx].q[0];
         q_vec[1] = surface.data[idx].q[1];
         q_vec[2] = surface.data[idx].q[2];
@@ -361,34 +361,52 @@ void surface_calcSigma0OnSurface(int windModelType){	//compute RCS at surface (6
         y        = -q_vec[1]/q_vec[2];
         double mss_iso=(mss_x+mss_y)/2;
 
+        // evaluate sigma0 (Eqn 34 [ZV 2000])
+        R2     = pow(cabs(reflectionCoef(sxangle)),2);   //reflection coefficient
+        Q4     = pow(vector_norm(q_vec),4) / pow(q_vec[2],4);
+
         if (windModelType == 0){    //isotropic model
             mss_b=0;
-            P = 1/(2*pi*sqrt(mss_iso*mss_iso)*sqrt(1-pow(mss_b,2))) *
-                exp(  -1/(2*(1-pow(mss_b,2))) * ( pow(x,2) / mss_iso -
-                                                  2*mss_b* (x*y)/sqrt(mss_iso*mss_iso) + pow(y,2) / mss_iso )); // PDF (61)
+            P=1/(2*pi*mss_iso) * exp(-(pow(x,2)+pow(y,2))/(2*mss_iso));
+
+            //P = 1/(2*pi*sqrt(mss_iso*mss_iso)*sqrt(1-pow(mss_b,2))) *
+            //    exp(  -1/(2*(1-pow(mss_b,2))) * ( pow(x,2) / mss_iso -
+            //                                      2*mss_b* (x*y)/sqrt(mss_iso*mss_iso) + pow(y,2) / mss_iso )); // PDF (61)
+            sigma0 = pi * R2 * Q4 * P;    //RCS  (68)
         }
         if (windModelType == 1){    ////anisotropic model
             P = 1/(2*pi*sqrt(mss_x*mss_y)*sqrt(1-pow(mss_b,2))) *
                 exp(  -1/(2*(1-pow(mss_b,2))) * ( pow(x,2) / mss_x -
                                                   2*mss_b* (x*y)/sqrt(mss_x*mss_y) + pow(y,2) / mss_y )); // PDF (61)
+            sigma0 = pi * R2 * Q4 * P;    //RCS  (68)
         }
-
 
         dP       = -1/(2*pi) * ( 1/pow(mss_iso,2) +                   //dP for isotropic mss
                                  (-1/2 * (pow(x,2) + pow(y,2))/pow(mss_iso,3) ) ) *
                    exp(  -1/2 * ( ( pow(x,2) + pow(y,2) )/ mss_iso ));
+        sigma0_dP = pi * R2 * Q4 * dP;  //derivative of sigma0 (used for H matrix)
 
+        // if use DDMA LUT, need to first ddmaLUT_initialize();
         /*
-        dP       = -1/(2*pi) * ( 1/pow(mss_x,2) +                   //derivative of P
-                    (-1/2 * (pow(x,2) + pow(y,2))/pow(mss_x,3) ) ) *
-                    exp(  -1/2 * ( ( pow(x,2) + pow(y,2) )/ mss_x ));
+        double sigma0_GMF;
+        int index_ws, index_theta;
+        double ws = surface.windData[idx].windSpeed_ms;
+        index_ws = (int) round((ws-0.05)/0.1)+1; //index=1,2,3...
+        index_theta = (int) round(sxangle * 180/pi);
+        sigma0_GMF = ddmaLUT[(index_ws-1)*90+index_theta-1];
         */
 
-        // evaluate sigma0 (Eqn 34 [ZV 2000])
-        R2     = pow(cabs(reflectionCoef(sxangle)),2);   //reflection coefficient
-        Q4     = pow(vector_norm(q_vec),4) / pow(q_vec[2],4);
-        sigma0 = pi * R2 * Q4 * P;    //RCS  (68)
-        sigma0_dP = pi * R2 * Q4 * dP;  //derivative of sigma0 (used for H matrix)
+        /*
+        if (idx==0 ||idx == 7260 || idx==14399){
+            printf("idx = %d\n",idx);
+            printf("q_vec = %f %f %f\n",q_vec[0],q_vec[1],q_vec[2]);
+            printf("mss_iso = %f \n",mss_iso);
+            printf("R2 = %f, Q4 = %f, P = %f\n",R2, Q4,P);
+            printf("wind = %f theta_deg = %f \n",ws, sxangle*180/pi);
+            printf("sigma0 = %f, sigma_GMF = %f\n", sigma0, sigma0_GMF);
+            printf("\n");
+        }
+        */
 
         // store sigma parameters
         surface.data[idx].sigma0    = sigma0;

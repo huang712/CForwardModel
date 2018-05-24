@@ -271,6 +271,7 @@ typedef struct{
     double minimumWindSpeed_ms;
 } windField;
 
+void ddmaLUT_initialize(void);
 void wind_interpolate(windField *wf,struct Geometry geom, struct inputWindField iwf, double grid_resolution);
 void wind_initialize(windField *wf, struct metadata meta, struct Geometry geom, struct inputWindField iwf);
 void wind_converWindToMSS( double windSpeedMag_ms, double windDirectionAngle_deg, double mss[5] );
@@ -281,6 +282,8 @@ void wind_save2PNG( windField *wf);
 void wind_getWindFieldAtXY( windField *wf, double x_m, double y_m, windFieldPixel *value );
 void wind_gradientWindField(windField *wf );
 void wind_writeWindTableFile(windField *wf);
+
+double ddmaLUT[63000];
 
 //****************************************************************************/
 // windSeries.c
