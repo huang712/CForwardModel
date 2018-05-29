@@ -29,7 +29,6 @@
 #include "string.h"
 #include "time.h"
 #include <fftw3.h>
-//#include "config.h"
 #include <time.h>
 #include <float.h>
 #include <unistd.h>
@@ -451,7 +450,7 @@ struct
 {
     int numDelayBins, numDoppBins, numBins;
     double dopplerRes_Hz, delayRes_chips;
-    double delayOffset_bins, dopplerOffset_bins;
+    int delayOffset_bins, dopplerOffset_bins;
     double chipsPerSec;
     double refPower_dB;
     fftw_plan FFTWPLAN,IFFTWPLAN;
@@ -464,7 +463,6 @@ struct
     int numDelayBins, numDoppBins, numBins;
     double dopplerRes_Hz, delayRes_chips;
     int delayOffset_bins, dopplerOffset_bins;
-    //double doppBin;
     double chipsPerSec;
     double refPower_dB;
     fftw_plan FFTWPLAN,IFFTWPLAN;

@@ -19,7 +19,7 @@ void init_metadata(struct CYGNSSL1 l1data, struct metadata *meta) {
     //default numbers
     meta->numDelaybins = 400;
     meta->numDopplerbins = 400;
-    meta->delayRez_chips = 0.05;
+    meta->delayRez_chips = 0.0510345;
     meta->dopplerRes_Hz = 25;
     meta->resample_startBin[0] = 0;
     meta->resample_startBin[1] = 100;
@@ -27,8 +27,8 @@ void init_metadata(struct CYGNSSL1 l1data, struct metadata *meta) {
     meta->resample_resolution_bins[1] = 20;
     meta->resample_numBins[0] = 17;
     meta->resample_numBins[1] = 11;
-    meta->specular_delayBinIdx = (meta->meas_ddm_sp_index[0]) * meta->resample_resolution_bins[0];
-    meta->specular_dopplerBinIdx = meta->resample_startBin[1] + meta->resample_resolution_bins[1] * meta->meas_ddm_sp_index[1];
+    meta->specular_delayBinIdx = meta->resample_startBin[0] + (int)round(meta->meas_ddm_sp_index[0] * meta->resample_resolution_bins[0]);
+    meta->specular_dopplerBinIdx = meta->resample_startBin[1] + (int)round(meta->resample_resolution_bins[1] * meta->meas_ddm_sp_index[1]);
 
     meta->temp_K = l1data.ant_temperature_cels+273.15;
     meta->noiseFigure_dB = l1data.noise_figue;

@@ -42,10 +42,10 @@ void ddm_initialize(struct metadata meta) {
     //  and initialize DDM buffers
 
     // reads DDM parameters from the configuration file into global struct
-    ddm.numDelayBins         = meta.numDelaybins;
-    ddm.numDoppBins          = meta.numDopplerbins;
-    ddm.delayOffset_bins     = meta.specular_delayBinIdx;
-    ddm.dopplerOffset_bins   = meta.specular_dopplerBinIdx;
+    ddm.numDelayBins         = meta.numDelaybins;   //400
+    ddm.numDoppBins          = meta.numDopplerbins; //400
+    ddm.delayOffset_bins     = meta.specular_delayBinIdx; //6.18 * 5
+    ddm.dopplerOffset_bins   = meta.specular_dopplerBinIdx; //5.02 * 20
     ddm.dopplerRes_Hz        = meta.dopplerRes_Hz;
     ddm.delayRes_chips       = meta.delayRez_chips;
     ddm.cohIntegrationTime_s = 0.001;
@@ -113,12 +113,8 @@ void ddm_binSurface(void) {
     // DDM bin that surface patch maps to
     int delayBin,dopplerBin;
     for(int i=0; i<surface.numGridPts; i++) {
-
-        //delayBin   = (int)floor(surface.data[i].delay_s * ddm.chipsPerSec / ddm.delayRes_chips) + ddm.delayOffset_bins;
-        //dopplerBin = (int)floor(surface.data[i].doppler_Hz/ddm.dopplerRes_Hz) + ddm.dopplerOffset_bins;
-
-        delayBin   = (int)(round(surface.data[i].delay_s * ddm.chipsPerSec / ddm.delayRes_chips) + ddm.delayOffset_bins);
-        dopplerBin = (int)(round(surface.data[i].doppler_Hz/ddm.dopplerRes_Hz) + ddm.dopplerOffset_bins);
+        delayBin   = (int)(round(surface.data[i].delay_s * ddm.chipsPerSec / ddm.delayRes_chips)) + ddm.delayOffset_bins;
+        dopplerBin = (int)(round(surface.data[i].doppler_Hz/ddm.dopplerRes_Hz)) + ddm.dopplerOffset_bins;
 
         if((dopplerBin < ddm.numDoppBins) && (dopplerBin >= 0) &&
            (delayBin < ddm.numDelayBins) && (delayBin >= 0 )) {

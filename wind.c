@@ -48,15 +48,12 @@ void wind_interpolate(windField *wf,struct Geometry geom, struct inputWindField 
     //interpolate from iwf.data[] to wf.data[]
     printf("Interpolate wind field into surface frame\n");
 
-    double sx_pos_ecef[3];
     double r_sp; //earth radius at specular point
     double d; //grid resolution
     double dphi, dtheta, phi, theta;  //all in unit of rad
     int numX, numY, numPts, ind;
 
-    solveSpecularPtPosition(geom.rx_position_ecef_m,geom.tx_position_ecef_m,sx_pos_ecef,0,100);
-
-    r_sp = vector_norm(sx_pos_ecef);
+    r_sp = vector_norm(geom.sp_position_ecef_m);
     d = grid_resolution;
     dphi = d/r_sp; //in rad
     dtheta = d/r_sp;
@@ -91,7 +88,7 @@ void wind_interpolate(windField *wf,struct Geometry geom, struct inputWindField 
 
     double R_ECEFtoSPEC[9],R_SPEC2ECEF[9];
 
-    getECEF2SpecularFrameXfrm(geom.rx_position_ecef_m,geom.tx_position_ecef_m,sx_pos_ecef,R_ECEFtoSPEC);
+    getECEF2SpecularFrameXfrm(geom.rx_position_ecef_m,geom.tx_position_ecef_m,geom.sp_position_ecef_m,R_ECEFtoSPEC);
     matrix_transpose(3,3,R_ECEFtoSPEC,R_SPEC2ECEF);
     for (int i = 0; i < numPts; i++){
         PUTx_ECEF[i] = PUTx[i] * R_SPEC2ECEF[0] + PUTy[i] * R_SPEC2ECEF[1] + PUTz[i] * R_SPEC2ECEF[2];

@@ -18,8 +18,8 @@ struct metadata
     double dopplerRes_Hz;
 
     //specularBin
-    double specular_delayBinIdx;
-    double specular_dopplerBinIdx;
+    int specular_delayBinIdx;
+    int specular_dopplerBinIdx;
 
     //downsampled DDM
     int resample_startBin[2];
