@@ -28,8 +28,19 @@
 #include "forwardmodel.h"
 #include "gnssr.h"
 
+double dmdx(double ws);
+
 void getSurfaceFieldDataName( int type, char *filename );
 void getSurfaceFieldData( int type, double *vals, char *filename, double minmax[2]);
+
+
+double dmdx(double ws){
+    //compute derivative of MSS respect to wind speed in Katzberg model
+    if(ws>0 && ws<3.49) {return 1.143e-3;}
+    else if(ws>3.49 && ws<46) {return 6.858e-3/ws;}
+    else if(ws>46) {return 4.69773e-4;}
+}
+
 
 void surface_initialize(struct metadata meta){
     surface.numGridPtsX = meta.numGridPoints[0];
@@ -345,11 +356,12 @@ void surface_calcSigma0OnSurface(int windModelType){	//compute RCS at surface (6
     // surface data have already been filled in.  It calculates the sigma0
     // using a bivariate Gaussian slope pdf
 
-    double mss_x,mss_y,mss_b,sxangle,q_vec[3],sigma0,sigma0_dP,x,y,P,Q4,R2,dP;
+    double ws,mss_x,mss_y,mss_b,sxangle,q_vec[3],sigma0,sigma0_dP,x,y,P,Q4,R2,dP;
 
     for (int idx = 0; idx < surface.numGridPts; idx++) {
 
         // evaluate slope pdf (Eqn 40 [ZV 2000])
+        ws = surface.windData[idx].windSpeed_ms;
         mss_x    = surface.windData[idx].mss_x;
         mss_y    = surface.windData[idx].mss_y;
         mss_b    = surface.windData[idx].mss_b;
@@ -383,7 +395,8 @@ void surface_calcSigma0OnSurface(int windModelType){	//compute RCS at surface (6
 
         dP       = -1/(2*pi) * ( 1/pow(mss_iso,2) +                   //dP for isotropic mss
                                  (-1/2 * (pow(x,2) + pow(y,2))/pow(mss_iso,3) ) ) *
-                   exp(  -1/2 * ( ( pow(x,2) + pow(y,2) )/ mss_iso ));
+                   exp(  -1/2 * ( ( pow(x,2) + pow(y,2) )/ mss_iso )) * dmdx(ws);
+
         sigma0_dP = pi * R2 * Q4 * dP;  //derivative of sigma0 (used for H matrix)
 
         // if use DDMA LUT, need to first ddmaLUT_initialize();

@@ -30,19 +30,40 @@ void DDMfm_saveToFile(struct DDMfm ddm_fm, int index, int pathType) {
 }
 
 void Jacobian_saveToFile(struct Jacobian jacob){
-    double val;
-    complex double valc;
+    double val,lat,lon;
+    //complex double valc;
 
-    FILE *outp;
+    FILE *outp,*outp1,*outp2;
     outp = fopen("Jacobian.dat", "wb");
+    outp1 = fopen("Jacobian_lat.dat", "wb");
+    outp2 = fopen("Jacobian_lon.dat", "wb");
 
-    //fwrite(&jacob.numDDMbins, 1, sizeof(double), outp);
-    //fwrite(&jacob.numSurfacePts, 1, sizeof(double), outp);
+    double numDDMbins,numSurfacePts;
+    numDDMbins = (double)jacob.numDDMbins;
+    numSurfacePts = (double)jacob.numSurfacePts;
+
+    fwrite(&numDDMbins, 1, sizeof(double), outp);
+    fwrite(&numDDMbins, 1, sizeof(double), outp1);
+    fwrite(&numDDMbins, 1, sizeof(double), outp2);
+    fwrite(&numSurfacePts, 1, sizeof(double), outp);
+    fwrite(&numSurfacePts, 1, sizeof(double), outp1);
+    fwrite(&numSurfacePts, 1, sizeof(double), outp2);
 
     for (int i = 0; i < jacob.numDDMbins * jacob.numSurfacePts; i++) {
         val = jacob.data[i].value;
+        //if(val >0 || abs(val)>1){
+        if(abs(val)>1){
+            printf("something wrong!! i= %d, H=%e\n",i,val);
+            //val=-1e-30;
+        }
+
+        lat = jacob.data[i].lat_deg;
+        lon = jacob.data[i].lon_deg;
         fwrite(&val, 1, sizeof(double), outp);
+        fwrite(&lat, 1, sizeof(double), outp1);
+        fwrite(&lon, 1, sizeof(double), outp2);
     }
     fclose(outp);
+    fclose(outp1);fclose(outp2);
     printf("save Jacobian into file\n");
 }

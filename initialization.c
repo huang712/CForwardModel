@@ -6,8 +6,10 @@
 #include "string.h"
 #include "forwardmodel.h"
 
-#define NLAT 721   //core: 501   synoptic: 721
-#define NLON 881   //core: 501   synoptic: 881
+#define NLAT_core 501   //core: resolution = 0.02deg
+#define NLON_core 501
+#define NLAT_syno 721   //synopric: resolution = 0.125deg
+#define NLON_syno 881
 
 #define ERR(e) {printf("Error: %s\n", nc_strerror(e));}
 
@@ -107,11 +109,11 @@ void init_inputWindField_core(char windFileName[], struct inputWindField *iwf){
 
     /* Program variables to hold the data we will read. We will only
        need enough space to hold one timestep of data; one record. */
-    float U10[NLAT][NLON];
-    float V10[NLAT][NLON];
+    float U10[NLAT_core][NLON_core];
+    float V10[NLAT_core][NLON_core];
 
     /* These program variables hold the latitudes and longitudes. */
-    float lats[NLAT], lons[NLON];
+    float lats[NLAT_core], lons[NLON_core];
 
     /* Error handling. */
     int retval;
@@ -122,7 +124,7 @@ void init_inputWindField_core(char windFileName[], struct inputWindField *iwf){
 
     //
     /* Get the varids of the latitude and longitude coordinate variables. */
-    if ((retval = nc_inq_varid(ncid, "latitude", &lat_varid)))  //lat_varid = 0;
+    if ((retval = nc_inq_varid(ncid, "latitude", &lat_varid)))  //lat_varid = 0;  lat_0
     ERR(retval);
     if ((retval = nc_inq_varid(ncid, "longitude", &lon_varid)))
     ERR(retval);
@@ -134,9 +136,9 @@ void init_inputWindField_core(char windFileName[], struct inputWindField *iwf){
     ERR(retval);
 
     /* Get the varids of the U and V variables. */
-    if ((retval = nc_inq_varid(ncid, "UGRD_10maboveground", &U10_varid)))
+    if ((retval = nc_inq_varid(ncid, "UGRD_10maboveground", &U10_varid))) //UGRD_10maboveground UGRD_P0_L103_GLL0
     ERR(retval);
-    if ((retval = nc_inq_varid(ncid, "VGRD_10maboveground", &V10_varid)))
+    if ((retval = nc_inq_varid(ncid, "VGRD_10maboveground", &V10_varid))) //VGRD_10maboveground VGRD_P0_L103_GLL0
     ERR(retval);
 
     //read U10 and V10 data   [Nlat][Nlon]
@@ -147,21 +149,21 @@ void init_inputWindField_core(char windFileName[], struct inputWindField *iwf){
 
     if ((retval = nc_close(ncid))) ERR(retval);
 
-    iwf->numPtsLat = NLAT;
-    iwf->numPtsLon = NLON;
+    iwf->numPtsLat = NLAT_core;
+    iwf->numPtsLon = NLON_core;
     iwf->numPts = iwf->numPtsLat * iwf->numPtsLon;
     iwf->lat_min_deg = lats[0];
-    iwf->lat_max_deg = lats[NLAT-1];
+    iwf->lat_max_deg = lats[NLAT_core-1];
     iwf->lon_min_deg = lons[0];
-    iwf->lon_max_deg = lons[NLON-1];
-    iwf->resolution_lat_deg = 0.02;
+    iwf->lon_max_deg = lons[NLON_core-1];
+    iwf->resolution_lat_deg = 0.02; ////sometimes this is -0.02
     iwf->resolution_lon_deg = 0.02;
     iwf->data = (struct inputWindFieldPixel *)calloc(iwf->numPts,sizeof(struct inputWindFieldPixel));
 
     int ind;
-    for(int lat = 0; lat < NLAT; lat++){
-        for(int lon = 0;lon < NLON; lon++){
-            ind = lon * NLAT + lat;
+    for(int lat = 0; lat < NLAT_core; lat++){
+        for(int lon = 0;lon < NLON_core; lon++){
+            ind = lon * NLAT_core + lat;
             iwf->data[ind].windSpeed_U10_ms = U10[lat][lon];
             iwf->data[ind].windSpeed_V10_ms= V10[lat][lon];
             iwf->data[ind].rainRate_mmhr = 0;
@@ -173,17 +175,17 @@ void init_inputWindField_core(char windFileName[], struct inputWindField *iwf){
 }
 
 void init_inputWindField_synoptic(char windFileName[], struct inputWindField *iwf){
-    printf("read wind field file\n");
+    printf("read wind field file : synoptic\n");
     int ncid;
     int lat_varid, lon_varid, U10_varid, V10_varid;
 
     /* Program variables to hold the data we will read. We will only
        need enough space to hold one timestep of data; one record. */
-    float U10[NLAT][NLON];
-    float V10[NLAT][NLON];
+    float U10[NLAT_syno][NLON_syno];
+    float V10[NLAT_syno][NLON_syno];
 
     /* These program variables hold the latitudes and longitudes. */
-    float lats[NLAT], lons[NLON];
+    float lats[NLAT_syno], lons[NLON_syno];
 
     /* Error handling. */
     int retval;
@@ -218,21 +220,21 @@ void init_inputWindField_synoptic(char windFileName[], struct inputWindField *iw
 
     if ((retval = nc_close(ncid))) ERR(retval);
 
-    iwf->numPtsLat = NLAT;
-    iwf->numPtsLon = NLON;
+    iwf->numPtsLat = NLAT_syno;
+    iwf->numPtsLon = NLON_syno;
     iwf->numPts = iwf->numPtsLat * iwf->numPtsLon;
     iwf->lat_min_deg = lats[0];
-    iwf->lat_max_deg = lats[NLAT-1];
+    iwf->lat_max_deg = lats[NLAT_syno-1];
     iwf->lon_min_deg = lons[0];
-    iwf->lon_max_deg = lons[NLON-1];
+    iwf->lon_max_deg = lons[NLON_syno-1];
     iwf->resolution_lat_deg = 0.125;   //sometimes this is -0.125
     iwf->resolution_lon_deg = 0.125;
     iwf->data = (struct inputWindFieldPixel *)calloc(iwf->numPts,sizeof(struct inputWindFieldPixel));
 
     int ind;
-    for(int lat = 0; lat < NLAT; lat++){
-        for(int lon = 0;lon < NLON; lon++){
-            ind = lon * NLAT + lat;
+    for(int lat = 0; lat < NLAT_syno; lat++){
+        for(int lon = 0;lon < NLON_syno; lon++){
+            ind = lon * NLAT_syno + lat;
             iwf->data[ind].windSpeed_U10_ms = U10[lat][lon];
             if(iwf->data[ind].windSpeed_U10_ms > 1000) iwf->data[ind].windSpeed_U10_ms=NAN;
             iwf->data[ind].windSpeed_V10_ms= V10[lat][lon];
@@ -301,7 +303,7 @@ char* getRxAntenna(int sc_num, int ddm_ant){
                 case 0:
                     printf("No antenna\n");break;
                 case 2:
-                    filename = "../../Data/All_E2ES_antennas/V6/Rx1_starborad_E2ES_v6.bin"; break;
+                    filename = "../../Data/All_E2ES_antennas/V6/Rx1_starboard_E2ES_v6.bin"; break;
                 case 3:
                     filename = "../../Data/All_E2ES_antennas/V6/Rx1_port_E2ES_v6.bin"; break;
             }
@@ -311,7 +313,7 @@ char* getRxAntenna(int sc_num, int ddm_ant){
                 case 0:
                     printf("No antenna\n");break;
                 case 2:
-                    filename = "../../Data/All_E2ES_antennas/V6/Rx2_starborad_E2ES_v6.bin"; break;
+                    filename = "../../Data/All_E2ES_antennas/V6/Rx2_starboard_E2ES_v6.bin"; break;
                 case 3:
                     filename = "../../Data/All_E2ES_antennas/V6/Rx2_port_E2ES_v6.bin"; break;
             }
@@ -321,7 +323,7 @@ char* getRxAntenna(int sc_num, int ddm_ant){
                 case 0:
                     printf("No antenna\n");break;
                 case 2:
-                    filename = "../../Data/All_E2ES_antennas/V6/Rx3_starborad_E2ES_v6.bin"; break;
+                    filename = "../../Data/All_E2ES_antennas/V6/Rx3_starboard_E2ES_v6.bin"; break;
                 case 3:
                     filename = "../../Data/All_E2ES_antennas/V6/Rx3_port_E2ES_v6.bin"; break;
             }
@@ -331,7 +333,7 @@ char* getRxAntenna(int sc_num, int ddm_ant){
                 case 0:
                     printf("No antenna\n");break;
                 case 2:
-                    filename = "../../Data/All_E2ES_antennas/V6/Rx4_starborad_E2ES_v6.bin"; break;
+                    filename = "../../Data/All_E2ES_antennas/V6/Rx4_starboard_E2ES_v6.bin"; break;
                 case 3:
                     filename = "../../Data/All_E2ES_antennas/V6/Rx4_port_E2ES_v6.bin"; break;
             }
@@ -341,7 +343,7 @@ char* getRxAntenna(int sc_num, int ddm_ant){
                 case 0:
                     printf("No antenna\n");break;
                 case 2:
-                    filename = "../../Data/All_E2ES_antennas/V6/Rx5_starborad_E2ES_v6.bin"; break;
+                    filename = "../../Data/All_E2ES_antennas/V6/Rx5_starboard_E2ES_v6.bin"; break;
                 case 3:
                     filename = "../../Data/All_E2ES_antennas/V6/Rx5_port_E2ES_v6.bin"; break;
             }
@@ -351,7 +353,7 @@ char* getRxAntenna(int sc_num, int ddm_ant){
                 case 0:
                     printf("No antenna\n");break;
                 case 2:
-                    filename = "../../Data/All_E2ES_antennas/V6/Rx6_starborad_E2ES_v6.bin"; break;
+                    filename = "../../Data/All_E2ES_antennas/V6/Rx6_starboard_E2ES_v6.bin"; break;
                 case 3:
                     filename = "../../Data/All_E2ES_antennas/V6/Rx6_port_E2ES_v6.bin"; break;
             }
@@ -361,7 +363,7 @@ char* getRxAntenna(int sc_num, int ddm_ant){
                 case 0:
                     printf("No antenna\n");break;
                 case 2:
-                    filename = "../../Data/All_E2ES_antennas/V6/Rx7_starborad_E2ES_v6.bin"; break;
+                    filename = "../../Data/All_E2ES_antennas/V6/Rx7_starboard_E2ES_v6.bin"; break;
                 case 3:
                     filename = "../../Data/All_E2ES_antennas/V6/Rx7_port_E2ES_v6.bin"; break;
             }
@@ -371,7 +373,7 @@ char* getRxAntenna(int sc_num, int ddm_ant){
                 case 0:
                     printf("No antenna\n");break;
                 case 2:
-                    filename = "../../Data/All_E2ES_antennas/V6/Rx8_starborad_E2ES_v6.bin"; break;
+                    filename = "../../Data/All_E2ES_antennas/V6/Rx8_starboard_E2ES_v6.bin"; break;
                 case 3:
                     filename = "../../Data/All_E2ES_antennas/V6/Rx8_port_E2ES_v6.bin"; break;
             }

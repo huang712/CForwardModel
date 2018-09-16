@@ -1,23 +1,47 @@
 #include <time.h>
+#include <string.h>
 #include "forwardmodel.h"
 #include "cygnss.h"
 #include "math.h"
 
-void Process_DDM(char L1dataFilename[], int sampleIndex, int ddmIndex, int pathType); //pathType: 0 for default, 1 for folder
+void Process_DDM(char windFilename[], char HWRFtype[], char L1dataFilename[], int sampleIndex, int ddmIndex, int pathType); //pathType: 0 for default, 1 for folder
 double DDM_binshift_corr(char L1dataFilename[], int sampleIndex, int ddmIndex, double shift);
 double corr2(double *A, double *B, int n);
 double find_opt_delayshift(char L1dataFilename[], int sampleIndex, int ddmIndex);
 
 int main() {
-    char L1dataFilename[1000] = "../../Data/CYGNSSL1/cyg04.ddmi.s20170904-000000-e20170904-235959.l1.power-brcs.a20.d20.nc";
+    //Irma ddmIndex=0, 80928-81111, eye = 81095
+    char windFilename[1000] = "../../Data/Irma2017/irma11l.2017090418.hwrfprs.synoptic.0p125.f005.uv.nc";
+    char L1dataFilename[1000] = "../../Data/Irma2017/cyg04.ddmi.s20170904-000000-e20170904-235959.l1.power-brcs.a20.d20.nc";
+    //char L1dataFilename[1000] = "../../Data/Irma2017/cyg04.ddmi.s20170904-000000-e20170904-235959.l1.power-brcs.sand031.nc";
+
+    Process_DDM(windFilename, "synoptic", L1dataFilename, 81095, 0, 0);
+
+    //for (int index = 80928; index < 81111; index++){   //80928-81111
+    //    Process_DDM(windFilename,"synoptic", L1dataFilename, index, 0, 1);
+    //}
+
+    /////////////////////
+    //Gita ddmIndex=2 50571-50730, eye = 50640
+    //char windFilename[1000] = "../../Data/Gita2018/gita09p.2018021212.hwrfprs.synoptic.0p125.f002.uv.nc";
+    //char windFilename[1000] = "../../Data/Gita2018/gita09p.2018021212.hwrfprs.core.0p02.f002.uv.nc";
+    //char L1dataFilename[1000] = "../../Data/Gita2018/cyg01.ddmi.s20180212-000000-e20180212-235959.l1.power-brcs.a20.d20.nc";
+    //char L1dataFilename[1000] = "../../Data/Gita2018/cyg01.ddmi.s20180212-000000-e20180212-235959.l1.power-brcs.sand031.nc";
+
+    //Process_DDM(windFilename, "synoptic", L1dataFilename, 50640, 2, 0);
+
+    //for (int index = 50571; index < 50730; index++){   //80981-81111
+    //    Process_DDM(windFilename,"synoptic", L1dataFilename, index, 2, 1);
+    //}
+    ////////////////////////
 
     /*
     double shift, f_index;  // calculate optimal delay bin shift
     int k = 0;
     FILE *outp = fopen("Delayshift.dat","ab+");;
-    for (int index = 81090; index < 81111; index++){  //80981-81111
+    for (int index = 50720; index < 50730; index++){  //80981-81111    50571-50730
         printf("index = %d\n",index);
-        shift=find_opt_delayshift(L1dataFilename, index, 0);
+        shift=find_opt_delayshift(L1dataFilename, index, 2);
         f_index = (double)index;
         fwrite(&f_index, 1, sizeof(double), outp);
         fwrite(&shift, 1, sizeof(double), outp);
@@ -25,25 +49,20 @@ int main() {
     }
     fclose(outp);
     */
-
-    Process_DDM(L1dataFilename, 81096, 0, 0);
-
-    //for (int index = 80928; index < 81111; index++){   //80981-81111
-    //    Process_DDM(L1dataFilename, index, 0, 1);
-    //}
     return 0;
 }
 
-void Process_DDM(char L1dataFilename[], int sampleIndex, int ddmIndex, int pathType){
+void Process_DDM(char windFilename[], char HWRFtype[], char L1dataFilename[], int sampleIndex, int ddmIndex, int pathType){
     struct CYGNSSL1 l1data;
     readL1data(L1dataFilename, sampleIndex, ddmIndex, &l1data);
     if(l1data.quality_flags != 0) return; //skip data of quality issue
 
     printf("sampleIndex = %d, quality_flags = %d\n", sampleIndex, l1data.quality_flags);
     printf("GPS PRN = %d\n", l1data.prn_code);
-    printf("sp delay row = %f\n", l1data.ddm_sp_delay_row);
-    printf("sp doppler col = %f\n", l1data.ddm_sp_dopp_col);
-    //printf("ant = %d\n",l1data.ddm_ant);
+    l1data.ddm_sp_delay_row = l1data.ddm_sp_delay_row + 0.5;
+    printf("sp delay row = %f, sp doppler col = %f\n", l1data.ddm_sp_delay_row,l1data.ddm_sp_dopp_col);
+    printf("sp lat = %f, lon = %f\n",l1data.sp_lat,l1data.sp_lon);
+    printf("ant = %d\n",l1data.ddm_ant);
     //printf("peak delay row = %d\n", l1data.ddm_peak_delay_row);
     //printf("peak doppler col = %d\n", l1data.ddm_peak_dopp_col);
     struct metadata meta;
@@ -55,10 +74,11 @@ void Process_DDM(char L1dataFilename[], int sampleIndex, int ddmIndex, int pathT
 
     printf("\n");
     printf("Initialize input/output structure...\n");
-    char windFileName[1000] = "../../Data/HWRF/irma11l.2017090418.hwrfprs.synoptic.0p125.f005.nc";
+
     init_metadata(l1data, &meta);
     init_powerParm(l1data, &pp);
-    init_inputWindField_synoptic(windFileName, &iwf);
+    if(strcmp(HWRFtype,"core") == 0) init_inputWindField_core(windFilename, &iwf);
+    else if(strcmp(HWRFtype,"synoptic") == 0) init_inputWindField_synoptic(windFilename, &iwf);
     init_Geometry(l1data, &geom);
     init_DDM(l1data, &ddm_fm);
     init_Jacobian(&jacob);
@@ -74,10 +94,15 @@ void Process_DDM(char L1dataFilename[], int sampleIndex, int ddmIndex, int pathT
 
     DDMobs_saveToFile(l1data, sampleIndex,pathType);
     DDMfm_saveToFile(ddm_fm, sampleIndex,pathType);
-    //Jacobian_saveToFile(jacob);
+    Jacobian_saveToFile(jacob);
 
     printf("\n");
     printf("ddm = %e\n",ddm_fm.data[0].power);
+
+    //printf("H = %e\n",jacob.data[22].value);
+    printf("H = %e\n",jacob.data[4134].value);
+    printf("H = %e\n",jacob.data[4135].value);
+
     //printf("delay = %e\n",ddm_fm.data[0].delay);
     //printf("Doppler = %e\n",ddm_fm.data[0].Doppler);
 
@@ -129,7 +154,8 @@ double DDM_binshift_corr(char L1dataFilename[], int sampleIndex, int ddmIndex, d
     struct DDMfm ddm_fm;
     struct Jacobian jacob;
 
-    char windFileName[1000] = "../../Data/HWRF/irma11l.2017090418.hwrfprs.synoptic.0p125.f005.nc";
+    //char windFileName[1000] = "../../Data/HWRF/irma11l.2017090418.hwrfprs.synoptic.0p125.f005.nc";
+    char windFileName[1000] = "../../Data/Gita2018/gita09p.2018021212.hwrfprs.core.0p02.f002.uv.nc";
     init_metadata(l1data, &meta);
     init_powerParm(l1data, &pp);
     init_inputWindField_synoptic(windFileName, &iwf);

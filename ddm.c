@@ -222,7 +222,7 @@ void ddm_Hmatrix(struct metadata meta, struct inputWindField iwf, struct Jacobia
     }
     bubble(bi_index1,numSurfacePt*4); // put in order
 
-    // throw repeated index and find the length K
+    // throw repeated index and find the length N
     for (i = 1; i < numSurfacePt*4; i++)
     {
         if (bi_index1[k] != bi_index1[i])
@@ -231,15 +231,15 @@ void ddm_Hmatrix(struct metadata meta, struct inputWindField iwf, struct Jacobia
             k++;  //index of the non-repeated array
         }
     }
-    int numPt_LL=k+1; //length of M (num of points on lat/lon) = K = numPt_LL
+    int numPt_LL=k+1; //length of M (num of points on lat/lon) = N = numPt_LL
 
     int *indexLL = (int *)calloc(numPt_LL,sizeof(int));
     for (i=0; i<numPt_LL; i++){
         indexLL[i]=bi_index1[i];
     }
 
-    //construct T matrix T: 144 x K
-    double **T; // T[144][K]interpolation transformation matrix: fill it with bi_weight[144][4]
+    //construct T matrix T: 144 x N
+    double **T; // T[144][N]interpolation transformation matrix: fill it with bi_weight[144][4]
     T = (double**)malloc(sizeof(double*) * numSurfacePt);
     for (i = 0; i < numSurfacePt; i++){
         T[i] = (double*)malloc(sizeof(double)*numPt_LL);
@@ -284,7 +284,7 @@ void ddm_Hmatrix(struct metadata meta, struct inputWindField iwf, struct Jacobia
     fclose(outp);
     */
 
-    //matrix multiplication H_new[187][110] = H0[187][144] * T[144][110]
+    //matrix multiplication H[187][110] = H0[187][144] * T[144][110]
     double **H_LL; //H matrix respect to lat/lon 187x110
     H_LL = (double**)malloc(sizeof(double*) * numBins);//
     for (i = 0; i < numBins; i++){//
@@ -299,7 +299,7 @@ void ddm_Hmatrix(struct metadata meta, struct inputWindField iwf, struct Jacobia
         }
     }
 
-    //save H_LL to jabob
+    //save H_LL to jabob.data[187x144]
     for (i = 0; i < numBins; i++){
         for (j = 0; j<numPt_LL; j++){
             jacob->data[j*numBins+i].value = H_LL[i][j];
