@@ -15,7 +15,7 @@ int main() {
     char L1dataFilename[1000] = "../../Data/Irma2017/cyg04.ddmi.s20170904-000000-e20170904-235959.l1.power-brcs.a20.d20.nc";
     //char L1dataFilename[1000] = "../../Data/Irma2017/cyg04.ddmi.s20170904-000000-e20170904-235959.l1.power-brcs.sand031.nc";
 
-    Process_DDM(windFilename, "synoptic", L1dataFilename, 81095, 0, 0);
+    Process_DDM(windFilename, "synoptic", L1dataFilename, 81096, 0, 0);
 
     //for (int index = 80928; index < 81111; index++){   //80928-81111
     //    Process_DDM(windFilename,"synoptic", L1dataFilename, index, 0, 1);
@@ -101,7 +101,7 @@ void Process_DDM(char windFilename[], char HWRFtype[], char L1dataFilename[], in
 
     //printf("H = %e\n",jacob.data[22].value);
     printf("H = %e\n",jacob.data[4134].value);
-    printf("H = %e\n",jacob.data[4135].value);
+    printf("num point in LL = %d\n",jacob.numPts_LL);
 
     //printf("delay = %e\n",ddm_fm.data[0].delay);
     //printf("Doppler = %e\n",ddm_fm.data[0].Doppler);

@@ -38,25 +38,19 @@ void Jacobian_saveToFile(struct Jacobian jacob){
     outp1 = fopen("Jacobian_lat.dat", "wb");
     outp2 = fopen("Jacobian_lon.dat", "wb");
 
-    double numDDMbins,numSurfacePts;
+    double numDDMbins,numPts_LL;
     numDDMbins = (double)jacob.numDDMbins;
-    numSurfacePts = (double)jacob.numSurfacePts;
+    numPts_LL = (double)jacob.numPts_LL;
 
     fwrite(&numDDMbins, 1, sizeof(double), outp);
     fwrite(&numDDMbins, 1, sizeof(double), outp1);
     fwrite(&numDDMbins, 1, sizeof(double), outp2);
-    fwrite(&numSurfacePts, 1, sizeof(double), outp);
-    fwrite(&numSurfacePts, 1, sizeof(double), outp1);
-    fwrite(&numSurfacePts, 1, sizeof(double), outp2);
+    fwrite(&numPts_LL, 1, sizeof(double), outp);
+    fwrite(&numPts_LL, 1, sizeof(double), outp1);
+    fwrite(&numPts_LL, 1, sizeof(double), outp2);
 
-    for (int i = 0; i < jacob.numDDMbins * jacob.numSurfacePts; i++) {
+    for (int i = 0; i < jacob.numDDMbins * jacob.numPts_LL; i++) {
         val = jacob.data[i].value;
-        //if(val >0 || abs(val)>1){
-        if(abs(val)>1){
-            printf("something wrong!! i= %d, H=%e\n",i,val);
-            //val=-1e-30;
-        }
-
         lat = jacob.data[i].lat_deg;
         lon = jacob.data[i].lon_deg;
         fwrite(&val, 1, sizeof(double), outp);

@@ -166,11 +166,20 @@ void ddm_Hmatrix(struct metadata meta, struct inputWindField iwf, struct Jacobia
             H0_lat_vec[j0] = surface.data[surface_index].pos_llh[0];
             H0_lon_vec[j0] = surface.data[surface_index].pos_llh[1];
 
+            //printf("bin_index = %d\n",surface.data[surface_index].bin_index);
+            if (surface.data[surface_index].bin_index < 0){ //if bin_index=-1, the surface point is outside the glistening zone, dHdm=0
+                for (i0=0;i0<numBins;i0++){
+                    H0[i0][j0]=0;
+                }
+                j0 = j0+1;
+
+            }
             if (surface.data[surface_index].bin_index >= 0){
                 H[surface.data[surface_index].bin_index] = surface.data[surface_index].total_dP;
                 ddm_convolveH_FFT(2); //convolve H with ambiguity function, save into H
 
                 i0=0;
+                // Resample: from high resolution DDM to 17x11 DDM
                 for (int k=startDoppelr_bin; k < (numDoppelrBins*resDoppelr_bins + startDoppelr_bin); k+=resDoppelr_bins) {
                     for (int l=startDelay_bin; l < (numDelayBins*resDelay_bins + startDelay_bin); l+=resDelay_bins) {
                         H0[i0][j0] = creal(H[DDMINDEX(k,l)]) * 100;
@@ -179,8 +188,8 @@ void ddm_Hmatrix(struct metadata meta, struct inputWindField iwf, struct Jacobia
                     }
                 }
                 _ddm_zero( H, width ); // length of H = 187
+                j0 = j0+1;
             }
-            j0 = j0+1;
         }
     }
 
@@ -257,24 +266,46 @@ void ddm_Hmatrix(struct metadata meta, struct inputWindField iwf, struct Jacobia
             for (k=0; k<4; k++){
                 if(bi_index[i][k]==indexLL[j]){
                     T[i][j]=bi_weight[i][k];
+                    //printf("T= %f, i= %d, j=%d\n",T[i][j],i,j);
                 }
             }
         }
     }
+
     /*
     printf("%d %d %d %d\n", bi_index[0][0],bi_index[0][1],bi_index[0][2],bi_index[0][3]);
     printf("%f %f %f %f\n", bi_weight[0][0],bi_weight[0][1],bi_weight[0][2],bi_weight[0][3]);
     printf("%d %d %d %d\n", indexLL[0],indexLL[1],indexLL[2],indexLL[3]);
     printf("%f %f %f %f\n", T[0][0],T[0][1],T[0][2],T[0][3]);
+    */
 
-    FILE *outp = fopen("T.dat", "wb");
-    for (i = 0;i < numSurfacePt;i++) {
-        for (j = 0; j < K; j++){
-            fwrite(&T[i][j], sizeof(double), 1, outp);
+    int saveH0,saveT;
+    saveH0 = 1;
+    saveT = 1;
+    if (saveH0 == 1){
+        FILE *outp = fopen("H0.dat", "wb");
+        for (j = 0;j< 144;j++) {
+            for (i = 0; i < 187; i++){
+                if(abs(H0[i][j])>1e-10){
+                    printf("something wrong in H0 second!! i= %d, j= %d H=%e\n",i,j,H0[i][j]);
+                }
+                fwrite(&H0[i][j], sizeof(double), 1, outp);
+            }
         }
+        fclose(outp);
     }
-    fclose(outp);
 
+    if (saveT == 1){
+        FILE *outp1 = fopen("T.dat", "wb");
+        for (j = 0;j < numPt_LL;j++) {
+            for (i = 0; i < numSurfacePt; i++){
+                fwrite(&T[i][j], sizeof(double), 1, outp1);
+            }
+        }
+        fclose(outp1);
+    }
+
+    /*
     FILE *outp2 = fopen("bi_index.dat", "wb");
     for (i = 0;i < numSurfacePt;i++) {
         for (j = 0; j < 4; j++){
@@ -283,6 +314,7 @@ void ddm_Hmatrix(struct metadata meta, struct inputWindField iwf, struct Jacobia
     }
     fclose(outp);
     */
+
 
     //matrix multiplication H[187][110] = H0[187][144] * T[144][110]
     double **H_LL; //H matrix respect to lat/lon 187x110
@@ -308,7 +340,7 @@ void ddm_Hmatrix(struct metadata meta, struct inputWindField iwf, struct Jacobia
         }
     }
     jacob->numDDMbins = numBins;
-    jacob->numSurfacePts = numPt_LL;
+    jacob->numPts_LL = numPt_LL;
 
     //free menmory
     for (i = 0; i < numBins; ++i){

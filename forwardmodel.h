@@ -115,7 +115,7 @@ struct DDMPixel
 struct Jacobian
 {
     int numDDMbins;
-    int numSurfacePts;
+    int numPts_LL;
     struct JacobianPixel *data; //structure in structure
 };
 
