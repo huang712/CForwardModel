@@ -45,6 +45,19 @@ void ddmaLUT_initialize(void){
 }
 
 void wind_interpolate(windField *wf,struct Geometry geom, struct inputWindField iwf, double grid_resolution){
+
+    /*
+    double x_vec[2]={16.50,16.625};
+    double y_vec[2]={-55.275, -55.15};
+    double x=16.574098;
+    double y=-55.216366;
+    int bi_index2[4];
+    double bi_weight2[4];
+    bilinear_interp(x_vec, y_vec, 2, 2, x, y, bi_index2, bi_weight2, 0.125);
+    printf("bi_index= %d, %d, %d ,%d\n",bi_index2[0],bi_index2[1],bi_index2[2],bi_index2[3]);
+    printf("bi_weight= %f, %f, %f ,%f\n",bi_weight2[0],bi_weight2[1],bi_weight2[2],bi_weight2[3]);
+    */  //to debug bilinear_interp
+
     //interpolate from iwf.data[] to wf.data[]
     printf("Interpolate wind field into surface frame\n");
 
@@ -131,14 +144,11 @@ void wind_interpolate(windField *wf,struct Geometry geom, struct inputWindField 
     for (int i = 0; i<numPts; i++){
         bilinear_interp(lat_vec, lon_vec, iwf.numPtsLat, iwf.numPtsLon,
                         PUT_LAT[i], PUT_LON[i], bi_index, bi_weight, fabs(iwf.resolution_lat_deg));
-        wf->data[i].windSpeed_U10_ms = bi_weight[0]*iwf.data[bi_index[0]].windSpeed_U10_ms
-                                       +bi_weight[1]*iwf.data[bi_index[1]].windSpeed_U10_ms
-                                       +bi_weight[2]*iwf.data[bi_index[2]].windSpeed_U10_ms
-                                       +bi_weight[3]*iwf.data[bi_index[3]].windSpeed_U10_ms;
-        wf->data[i].windSpeed_V10_ms = bi_weight[0]*iwf.data[bi_index[0]].windSpeed_V10_ms
-                                       +bi_weight[1]*iwf.data[bi_index[1]].windSpeed_V10_ms
-                                       +bi_weight[2]*iwf.data[bi_index[2]].windSpeed_V10_ms
-                                       +bi_weight[3]*iwf.data[bi_index[3]].windSpeed_V10_ms;
+        wf->data[i].windSpeed_U10_ms = bi_weight[0]*iwf.data[bi_index[0]].windSpeed_ms
+                                       +bi_weight[1]*iwf.data[bi_index[1]].windSpeed_ms
+                                       +bi_weight[2]*iwf.data[bi_index[2]].windSpeed_ms
+                                       +bi_weight[3]*iwf.data[bi_index[3]].windSpeed_ms;
+        wf->data[i].windSpeed_V10_ms = 0;
         wf->data[i].freezingHeight_m = bi_weight[0]*iwf.data[bi_index[0]].freezingHeight_m
                                        +bi_weight[1]*iwf.data[bi_index[1]].freezingHeight_m
                                        +bi_weight[2]*iwf.data[bi_index[2]].freezingHeight_m
@@ -147,6 +157,10 @@ void wind_interpolate(windField *wf,struct Geometry geom, struct inputWindField 
                                     +bi_weight[1]*iwf.data[bi_index[1]].rainRate_mmhr
                                     +bi_weight[2]*iwf.data[bi_index[2]].rainRate_mmhr
                                     +bi_weight[3]*iwf.data[bi_index[3]].rainRate_mmhr;
+        for (int j = 0 ; j<4; j++){
+            bi_index0[i][j]=bi_index[j];
+            bi_weight0[i][j]=bi_weight[j];
+        }
     }
 
     /* nearest interpoation

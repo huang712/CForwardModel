@@ -58,8 +58,12 @@ FILE *outputPtr, *errPtr, *consolePtr;
 
 
 //******************************************************************************/
-// Geometry (geom.c)
+//grid transformation
+int bi_index0[14400][4];  // for 1km in SURF
+double bi_weight0[14400][4]; // for 1km in SURF
 
+
+// Geometry (geom.c)
 
 // global structure for holding Rx\Tx\Sx geometry
 typedef struct {

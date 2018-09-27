@@ -239,6 +239,9 @@ void init_inputWindField_synoptic(char windFileName[], struct inputWindField *iw
             if(iwf->data[ind].windSpeed_U10_ms > 1000) iwf->data[ind].windSpeed_U10_ms=NAN;
             iwf->data[ind].windSpeed_V10_ms= V10[lat][lon];
             if(iwf->data[ind].windSpeed_V10_ms > 1000) iwf->data[ind].windSpeed_V10_ms=NAN;
+
+            iwf->data[ind].windSpeed_ms=sqrt(iwf->data[ind].windSpeed_U10_ms*iwf->data[ind].windSpeed_U10_ms+
+                                             iwf->data[ind].windSpeed_V10_ms*iwf->data[ind].windSpeed_V10_ms);
             iwf->data[ind].rainRate_mmhr = 0;
             iwf->data[ind].freezingHeight_m = 2;
             iwf->data[ind].lat_deg = lats[lat];
@@ -282,7 +285,7 @@ void init_DDM(struct CYGNSSL1 l1data, struct DDMfm *ddm_fm){
 
 void init_Jacobian(struct Jacobian *jacob){
     jacob->numDDMbins = 187;
-    jacob->numPts_LL = 144; //initialize it large enough
+    jacob->numPts_LL = 144; //initialize it large enough 100-120
 
     int numBin = jacob->numDDMbins * jacob->numPts_LL;
     jacob->data = (struct JacobianPixel *)calloc(numBin,sizeof(struct JacobianPixel));
@@ -290,6 +293,11 @@ void init_Jacobian(struct Jacobian *jacob){
         jacob->data[i].value = 0;
         jacob->data[i].lat_deg = 0;
         jacob->data[i].lon_deg = 0;
+    }
+    for(int i = 0; i< 144; i++){
+        jacob->Pts_lat_vec[i] = 0;
+        jacob->Pts_lon_vec[i] = 0;
+        jacob->Pts_ind_vec[i] = -1;
     }
 
 }

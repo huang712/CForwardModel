@@ -65,11 +65,11 @@ void bilinear_interp(double *x_vec, double *y_vec, int size_x, int size_y, doubl
     for (int i=0; i<size_y; i++){
         if (fabs(y_vec[i]-y)<resolution){
             iy1=i; iy2=i+1;
-            y1=y_vec[iy1]; y2=x_vec[iy2];
+            y1=y_vec[iy1]; y2=y_vec[iy2];
             break;
         }
     }
-
+    //printf("x1 x2 y1 y2= %f %f %f %f\n",x1,x2,y1,y2);
     bi_index[0] = iy1*size_x+ix1; //index of Q11
     bi_index[1] = iy1*size_x+ix2; //index of Q21
     bi_index[2] = iy2*size_x+ix1; //index of Q12

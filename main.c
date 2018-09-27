@@ -9,6 +9,8 @@ double DDM_binshift_corr(char L1dataFilename[], int sampleIndex, int ddmIndex, d
 double corr2(double *A, double *B, int n);
 double find_opt_delayshift(char L1dataFilename[], int sampleIndex, int ddmIndex);
 
+void FiniteDiff(char windFilename[], char HWRFtype[], char L1dataFilename[], int sampleIndex, int ddmIndex, int pathType);
+
 int main() {
     //Irma ddmIndex=0, 80928-81111, eye = 81095
     char windFilename[1000] = "../../Data/Irma2017/irma11l.2017090418.hwrfprs.synoptic.0p125.f005.uv.nc";
@@ -16,6 +18,7 @@ int main() {
     //char L1dataFilename[1000] = "../../Data/Irma2017/cyg04.ddmi.s20170904-000000-e20170904-235959.l1.power-brcs.sand031.nc";
 
     Process_DDM(windFilename, "synoptic", L1dataFilename, 81096, 0, 0);
+    //FiniteDiff(windFilename, "synoptic", L1dataFilename, 81096, 0, 0);
 
     //for (int index = 80928; index < 81111; index++){   //80928-81111
     //    Process_DDM(windFilename,"synoptic", L1dataFilename, index, 0, 1);
@@ -59,7 +62,7 @@ void Process_DDM(char windFilename[], char HWRFtype[], char L1dataFilename[], in
 
     printf("sampleIndex = %d, quality_flags = %d\n", sampleIndex, l1data.quality_flags);
     printf("GPS PRN = %d\n", l1data.prn_code);
-    l1data.ddm_sp_delay_row = l1data.ddm_sp_delay_row + 0.5;
+    //l1data.ddm_sp_delay_row = l1data.ddm_sp_delay_row + 0.5;
     printf("sp delay row = %f, sp doppler col = %f\n", l1data.ddm_sp_delay_row,l1data.ddm_sp_dopp_col);
     printf("sp lat = %f, lon = %f\n",l1data.sp_lat,l1data.sp_lon);
     printf("ant = %d\n",l1data.ddm_ant);
@@ -83,28 +86,19 @@ void Process_DDM(char windFilename[], char HWRFtype[], char L1dataFilename[], in
     init_DDM(l1data, &ddm_fm);
     init_Jacobian(&jacob);
 
-    //int index = 476 * 721 +410;
-    //printf("lat = %f, lon = %f, wind = \n",iwf.data[index].lat_deg,iwf.data[index].lon_deg,iwf.data[index].windSpeed_U10_ms);
-    //printf("\n");
     double start, end;
     start = clock();
-    forwardModel(meta, pp, iwf, geom, &ddm_fm, &jacob);
+    forwardModel(meta, pp, iwf, geom, &ddm_fm, &jacob,1);
     end =clock();
     printf("Forward model running time: %f seconds\n", (end-start)/CLOCKS_PER_SEC);
+
+    printf("ddm 50= %e\n",ddm_fm.data[50].power);
+    printf("H = %e\n",jacob.data[4912].value);
 
     DDMobs_saveToFile(l1data, sampleIndex,pathType);
     DDMfm_saveToFile(ddm_fm, sampleIndex,pathType);
     Jacobian_saveToFile(jacob);
-
-    printf("\n");
-    printf("ddm = %e\n",ddm_fm.data[0].power);
-
-    //printf("H = %e\n",jacob.data[22].value);
-    printf("H = %e\n",jacob.data[4134].value);
-    printf("num point in LL = %d\n",jacob.numPts_LL);
-
-    //printf("delay = %e\n",ddm_fm.data[0].delay);
-    //printf("Doppler = %e\n",ddm_fm.data[0].Doppler);
+    PtsVec_saveToFile(jacob);
 
     free(pp.data);
     free(iwf.data);
@@ -163,7 +157,7 @@ double DDM_binshift_corr(char L1dataFilename[], int sampleIndex, int ddmIndex, d
     init_DDM(l1data, &ddm_fm);
     init_Jacobian(&jacob);
 
-    forwardModel(meta, pp, iwf, geom, &ddm_fm, &jacob);
+    forwardModel(meta, pp, iwf, geom, &ddm_fm, &jacob,0);
 
     free(pp.data);
     free(iwf.data);
@@ -229,4 +223,81 @@ double corr2(double *A, double *B, int n){
     den = sqrt (A1*B1);
 
     return nom/den;
+}
+
+void FiniteDiff(char windFilename[], char HWRFtype[], char L1dataFilename[], int sampleIndex, int ddmIndex, int pathType){
+    struct CYGNSSL1 l1data;
+    readL1data(L1dataFilename, sampleIndex, ddmIndex, &l1data);
+    if(l1data.quality_flags != 0) return; //skip data of quality issue
+
+    struct metadata meta;
+    struct powerParm pp;
+    struct inputWindField iwf,iwf1;
+    struct Geometry geom;
+    struct DDMfm ddm_fm0,ddm_fm1;
+    struct Jacobian jacob;
+
+    printf("\n");
+    printf("Initialize input/output structure...\n");
+
+    init_metadata(l1data, &meta);
+    init_powerParm(l1data, &pp);
+    init_inputWindField_synoptic(windFilename, &iwf);
+    init_Geometry(l1data, &geom);
+    init_DDM(l1data, &ddm_fm0);
+    init_DDM(l1data, &ddm_fm1);
+    init_Jacobian(&jacob);
+
+    int i,j;
+    double start, end;
+    start = clock();
+
+    forwardModel(meta, pp, iwf, geom, &ddm_fm0, &jacob,1);
+    Jacobian_saveToFile(jacob);
+    int numPts_LL = jacob.numPts_LL;
+
+    double **H_FD; //H matrix by finite difference H[187][numPts_LL]
+    H_FD = (double**)malloc(sizeof(double*) * 187);
+    for (i = 0; i < 187; i++){
+        H_FD[i] = (double*)malloc(sizeof(double)*numPts_LL);
+    }
+
+    int Pts_index;
+    double u,v;
+    for (i=0;i<numPts_LL;i++){
+        init_inputWindField_synoptic(windFilename, &iwf);
+        Pts_index = jacob.Pts_ind_vec[i];
+        iwf.data[Pts_index].windSpeed_ms +=0.00001;
+        forwardModel(meta, pp, iwf, geom, &ddm_fm1, &jacob,0);
+        for (j = 0;j < 187; j++){
+            H_FD[j][i]=(ddm_fm1.data[j].power-ddm_fm0.data[j].power)/0.00001;
+        }
+    }
+
+    end =clock();
+    printf("Finite Diffence running time: %f seconds\n", (end-start)/CLOCKS_PER_SEC);
+
+    //DDMfm_saveToFile(ddm_fm, sampleIndex,pathType);
+    //Jacobian_saveToFile(jacob);
+    //PtsVec_saveToFile(jacob);
+
+    printf("\n");
+    printf("H = %e\n",H_FD[51][27]);
+    printf("num point in LL = %d\n",jacob.numPts_LL);
+
+    FILE *outp = fopen("H_FD.dat", "wb");
+    for (j = 0;j< numPts_LL;j++) {
+        for (i = 0; i < 187; i++){
+            fwrite(&H_FD[i][j], sizeof(double), 1, outp);
+        }
+    }
+    fclose(outp);
+
+    free(pp.data);
+    free(iwf.data);
+    free(ddm_fm0.data);
+    free(jacob.data);
+
+    printf("END\n");
+    printf("\n");
 }

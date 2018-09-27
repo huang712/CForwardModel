@@ -61,3 +61,17 @@ void Jacobian_saveToFile(struct Jacobian jacob){
     fclose(outp1);fclose(outp2);
     printf("save Jacobian into file\n");
 }
+
+
+void PtsVec_saveToFile(struct Jacobian jacob) {
+    FILE *outp = fopen("PtsVec.dat", "wb");
+    double temp;
+    for (int j = 0; j < jacob.numPts_LL; j++) {
+        temp = (double)jacob.Pts_ind_vec[j];
+        fwrite(&temp, sizeof(double), 1, outp);
+        fwrite(&jacob.Pts_lat_vec[j], sizeof(double), 1, outp);
+        fwrite(&jacob.Pts_lon_vec[j], sizeof(double), 1, outp);
+    }
+    fclose(outp);
+    printf("save Points vector in LL from Jacobian into file\n");
+}

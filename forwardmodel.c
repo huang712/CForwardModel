@@ -4,8 +4,10 @@
 #include "forwardmodel.h"
 #include "gnssr.h"
 
-void forwardModel(struct metadata meta, struct powerParm pp, struct inputWindField iwf, struct Geometry geom, struct DDMfm *ddm_fm, struct Jacobian *jacob)
+void forwardModel(struct metadata meta, struct powerParm pp, struct inputWindField iwf,
+                  struct Geometry geom, struct DDMfm *ddm_fm, struct Jacobian *jacob, int option)
 {
+    //option = 0, only compute DDM; option = 1, compute DDM+Jacobian
     printf("Running forward model...\n");
     surface_initialize(meta);
     ddm_initialize(meta);
@@ -40,7 +42,11 @@ void forwardModel(struct metadata meta, struct powerParm pp, struct inputWindFie
     ddm_mag(); //save to DDM[i];
 
     ddm_save(meta,ddm_fm,1);  //save to structure ddm_fm
-    ddm_Hmatrix(meta, iwf, jacob);  //compute and save to structure jacob
+
+    if (option == 1){
+        ddm_Hmatrix(meta, iwf, jacob);  //compute and save to structure jacob
+    }
+
 
     //surface_saveWindToFile();
     //surface_saveDopplerToFile();

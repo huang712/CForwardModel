@@ -73,7 +73,7 @@ struct inputWindField
 
 struct inputWindFieldPixel
 {
-    double windSpeed_U10_ms, windSpeed_V10_ms;
+    double windSpeed_U10_ms, windSpeed_V10_ms,windSpeed_ms;
     double rainRate_mmhr, freezingHeight_m;
     double lat_deg, lon_deg;
 };
@@ -116,6 +116,9 @@ struct Jacobian
 {
     int numDDMbins;
     int numPts_LL;
+    double Pts_lat_vec[144]; //long enough to larger than numPts_LL
+    double Pts_lon_vec[144];
+    int Pts_ind_vec[144];
     struct JacobianPixel *data; //structure in structure
 };
 
@@ -126,7 +129,9 @@ struct JacobianPixel
 };
 
 //forward model.c : Forward model main function
-void forwardModel(struct metadata meta, struct powerParm pp, struct inputWindField iwf, struct Geometry geom, struct DDMfm *ddm_fm, struct Jacobian *jacob);
+void forwardModel(struct metadata meta, struct powerParm pp,
+                  struct inputWindField iwf, struct Geometry geom,
+                  struct DDMfm *ddm_fm, struct Jacobian *jacob, int option);
 
 //initialization.c : initialization functions
 void init_metadata(struct CYGNSSL1 l1data, struct metadata *meta);
@@ -141,6 +146,7 @@ char* getRxAntenna(int sc_num, int ddm_ant);
 //saveFile.c : file saving functions (for debug)
 void DDMfm_saveToFile(struct DDMfm ddm_fm, int index, int pathType);
 void Jacobian_saveToFile(struct Jacobian jacob);
+void PtsVec_saveToFile(struct Jacobian jacob);
 
 #endif //CFORWARDMODEL_INPUTOUPUT_H
 
