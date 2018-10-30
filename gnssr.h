@@ -24,10 +24,10 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include "complex.h"
-#include "math.h"
-#include "string.h"
-#include "time.h"
+#include <complex.h>
+#include <math.h>
+#include <string.h>
+#include <time.h>
 #include <fftw3.h>
 #include <time.h>
 #include <float.h>

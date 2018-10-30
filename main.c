@@ -1,8 +1,8 @@
+#include <math.h>
 #include <time.h>
 #include <string.h>
 #include "forwardmodel.h"
 #include "cygnss.h"
-#include "math.h"
 
 void Process_DDM(char windFilename[], char HWRFtype[], char L1dataFilename[], int sampleIndex, int ddmIndex, int pathType); //pathType: 0 for default, 1 for folder
 double DDM_binshift_corr(char L1dataFilename[], int sampleIndex, int ddmIndex, double shift);
@@ -17,12 +17,12 @@ int main() {
     char L1dataFilename[1000] = "../../Data/Irma2017/cyg04.ddmi.s20170904-000000-e20170904-235959.l1.power-brcs.a20.d20.nc";
     //char L1dataFilename[1000] = "../../Data/Irma2017/cyg04.ddmi.s20170904-000000-e20170904-235959.l1.power-brcs.sand031.nc";
 
-    Process_DDM(windFilename, "synoptic", L1dataFilename, 81096, 0, 0);
+    //Process_DDM(windFilename, "synoptic", L1dataFilename, 81096, 0, 0);
     //FiniteDiff(windFilename, "synoptic", L1dataFilename, 81096, 0, 0);
 
-    //for (int index = 80928; index < 81111; index++){   //80928-81111
-    //    Process_DDM(windFilename,"synoptic", L1dataFilename, index, 0, 1);
-    //}
+    for (int index = 81095; index < 81096; index++){   //80928-81111
+       Process_DDM(windFilename,"synoptic", L1dataFilename, index, 0, 1);
+    }
 
     /////////////////////
     //Gita ddmIndex=2 50571-50730, eye = 50640
@@ -95,10 +95,10 @@ void Process_DDM(char windFilename[], char HWRFtype[], char L1dataFilename[], in
     printf("ddm 50= %e\n",ddm_fm.data[50].power);
     printf("H = %e\n",jacob.data[4912].value);
 
-    DDMobs_saveToFile(l1data, sampleIndex,pathType);
-    DDMfm_saveToFile(ddm_fm, sampleIndex,pathType);
-    Jacobian_saveToFile(jacob);
-    PtsVec_saveToFile(jacob);
+    //DDMobs_saveToFile(l1data, sampleIndex,pathType);
+    //DDMfm_saveToFile(ddm_fm, sampleIndex,pathType);
+    //Jacobian_saveToFile(jacob);
+    //PtsVec_saveToFile(jacob);
 
     free(pp.data);
     free(iwf.data);
@@ -107,7 +107,7 @@ void Process_DDM(char windFilename[], char HWRFtype[], char L1dataFilename[], in
 
     printf("END\n");
     printf("\n");
-}
+} // end of process_DDM
 
 double find_opt_delayshift(char L1dataFilename[], int sampleIndex, int ddmIndex){
     // return the optimal shift in DDM model
@@ -257,9 +257,9 @@ void FiniteDiff(char windFilename[], char HWRFtype[], char L1dataFilename[], int
     int numPts_LL = jacob.numPts_LL;
 
     double **H_FD; //H matrix by finite difference H[187][numPts_LL]
-    H_FD = (double**)malloc(sizeof(double*) * 187);
+    H_FD = (double**)calloc(187,sizeof(double*));
     for (i = 0; i < 187; i++){
-        H_FD[i] = (double*)malloc(sizeof(double)*numPts_LL);
+        H_FD[i] = (double*)calloc(numPts_LL,sizeof(double));
     }
 
     int Pts_index;
@@ -293,6 +293,11 @@ void FiniteDiff(char windFilename[], char HWRFtype[], char L1dataFilename[], int
     }
     fclose(outp);
 
+    for (i = 0; i < 187; i++){
+        free(H_FD[i]);
+    }
+    free(H_FD);
+
     free(pp.data);
     free(iwf.data);
     free(ddm_fm0.data);
@@ -300,4 +305,4 @@ void FiniteDiff(char windFilename[], char HWRFtype[], char L1dataFilename[], int
 
     printf("END\n");
     printf("\n");
-}
+} // end of FiniteDiff

@@ -2,8 +2,8 @@
 // Created by Feixiong Huang on 10/19/17.
 //
 #include <netcdf.h>
-#include "math.h"
-#include "string.h"
+#include <math.h>
+#include <string.h>
 #include "forwardmodel.h"
 
 #define NLAT_core 501   //core: resolution = 0.02deg
