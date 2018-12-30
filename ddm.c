@@ -266,7 +266,7 @@ void ddm_Hmatrix(struct metadata meta, struct inputWindField iwf, struct Jacobia
 
     double **T; // T[144][K]
     T = (double**)calloc(numSurfacePt10,sizeof(double*));
-    for (i = 0; i < numSurfacePt1; i++){
+    for (i = 0; i < numSurfacePt10; i++){
         T[i] = (double*)calloc(numPt_LL,sizeof(double));
     }
 
@@ -361,21 +361,19 @@ void ddm_Hmatrix(struct metadata meta, struct inputWindField iwf, struct Jacobia
     }
 
     //free menmory
-    printf("point0\n");
     for (i = 0; i < numBins; i++){
         free(H0[i]);
     }
     free(H0);
-    printf("point1\n");
+
     for (i = 0; i < numBins; i++){
         free(H_LL[i]);
     }
     free(H_LL);
-    printf("point2\n");
+
     free(H0_lat_vec); free(H0_lon_vec);
     free(bi_index1); free(indexLL);
 
-    printf("point3\n");
     for (i = 0; i < numSurfacePt1; i++){
         free(M[i]);
     }
@@ -385,8 +383,6 @@ void ddm_Hmatrix(struct metadata meta, struct inputWindField iwf, struct Jacobia
          free(T[i]);
     }
     free(T);
-
-
 }
 
 void ddm_mapSurfaceToDDM(void) {
