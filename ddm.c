@@ -142,7 +142,7 @@ void ddm_Hmatrix(struct metadata meta, struct inputWindField iwf, struct Jacobia
 
     _ddm_zero( H, width );
 
-    int i, j, surface_index;
+    int i, j, k, surface_index;
     int numBins = numDelayBins * numDoppelrBins; //187
     int numSurfacePt1 = meta.numGridPoints[0] * meta.numGridPoints[1]; //14400  num point in 1 km resolution
     int numSurfacePt10 = (int)(numSurfacePt1/100); //144  num point in 10 km resolution
@@ -209,24 +209,30 @@ void ddm_Hmatrix(struct metadata meta, struct inputWindField iwf, struct Jacobia
             bi_index1[i*4+j]=bi_index0[i][j];
         }
     }
-    bubble(bi_index1,numSurfacePt1*4); // put in order
 
-    // throw repeated index and find the length K
-    int k = 0;
-    for (i = 1; i < numSurfacePt1*4; i++)
-    {
-        if (bi_index1[k] != bi_index1[i])
-        {
-            bi_index1[k + 1] = bi_index1[i];
-            k++;  //index of the non-repeated array
-        }
+    //throw repearted index in bi_index1
+    int *a = (int *)calloc(iwf.numPts,sizeof(int)); //array to store occurence times of each index;
+    memset(a,0,sizeof(a));
+    //int a[2000]={0};  //array to store occurence times of each index; length must be larger than all bi_index1[
+    for (i=0;i<numSurfacePt1*4;i++){
+        a[bi_index1[i]]=a[bi_index1[i]]+1;
     }
-    int numPt_LL=k+1; //length of M (num of points on lat/lon) = K = numPt_LL
+
+    //find the lenth numPt_LL and store index into the indexLL
+    int numPt_LL = 0;
+    for (i=0;i<iwf.numPts;i++){
+        if(a[i]>0) numPt_LL++;
+    }
 
     int *indexLL = (int *)calloc(numPt_LL,sizeof(int));
-    for (i=0; i<numPt_LL; i++){
-        indexLL[i]=bi_index1[i];
+    j=0;
+    for (i=0;i<iwf.numPts;i++){
+        if(a[i]>0){
+            indexLL[j]=i;
+            j++;
+        }
     }
+    free(a);
 
     //construct M matrix M: 14400 x K
     double **M; // T[14400][K] interpolation transformation matrix: fill it with bi_weight[14400][4]
