@@ -234,7 +234,7 @@ void init_inputWindField_synoptic(char windFileName[], struct inputWindField *iw
     int ind;
     for(int lat = 0; lat < NLAT_syno; lat++){
         for(int lon = 0;lon < NLON_syno; lon++){
-            ind = lon * NLAT_syno + lat;
+            ind = lon * NLAT_syno + lat; //this should probably change
             iwf->data[ind].windSpeed_U10_ms = U10[lat][lon];
             if(iwf->data[ind].windSpeed_U10_ms > 1000) iwf->data[ind].windSpeed_U10_ms=NAN;
             iwf->data[ind].windSpeed_V10_ms= V10[lat][lon];

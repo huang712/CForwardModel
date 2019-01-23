@@ -213,7 +213,6 @@ void surface_calcGeomOverSurface(orbitGeometryStruct *geometry, int surfType, st
                 geom_getRelativeAngleInFrame(geometry->tx_pos, PUT, geometry->SPEC_TO_TX_ORB_FRAME, angleSxFromTx_rad );
             }
 
-
             // get Rx & Tx antenna gains for specific angles
             RxG = antenna_getGain_abs(CYGNSS_NADIR_ANT,   LHCP, angleSxFromRx_rad );
             TxG = antenna_getGain_abs(GPS_SAT_ANT,        RHCP, angleSxFromTx_rad );

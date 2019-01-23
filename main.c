@@ -14,14 +14,16 @@ void FiniteDiff(char windFilename[], char HWRFtype[], char L1dataFilename[], int
 int main() {
     //Irma ddmIndex=0, 80928-81111, eye = 81095
     char windFilename[1000] = "../../Data/Irma2017/irma11l.2017090418.hwrfprs.synoptic.0p125.f005.uv.nc";
-    char L1dataFilename[1000] = "../../Data/Irma2017/cyg04.ddmi.s20170904-000000-e20170904-235959.l1.power-brcs.a20.d20.nc";
+    char L1dataFilename[1000] = "../../Data/Irma2017/cyg04.ddmi.s20170904-000000-e20170904-235959.l1.power-brcs.a21.d21.nc";
     //char L1dataFilename[1000] = "../../Data/Irma2017/cyg04.ddmi.s20170904-000000-e20170904-235959.l1.power-brcs.sand031.nc";
 
     //Process_DDM(windFilename, "synoptic", L1dataFilename, 81096, 0, 0);
     //FiniteDiff(windFilename, "synoptic", L1dataFilename, 81096, 0, 0);
 
+    int pathType = 0; //0 for current; 1 for folder
+    int ddmIndex = 0;
     for (int index = 81095; index < 81096; index++){   //80928-81111
-       Process_DDM(windFilename,"synoptic", L1dataFilename, index, 0, 1);
+       Process_DDM(windFilename,"synoptic", L1dataFilename, index, ddmIndex, pathType);
     }
 
     /////////////////////
@@ -88,15 +90,15 @@ void Process_DDM(char windFilename[], char HWRFtype[], char L1dataFilename[], in
 
     double start, end;
     start = clock();
-    forwardModel(meta, pp, iwf, geom, &ddm_fm, &jacob,1);
+    forwardModel(meta, pp, iwf, geom, &ddm_fm, &jacob,0);
     end =clock();
     printf("Forward model running time: %f seconds\n", (end-start)/CLOCKS_PER_SEC);
 
     printf("ddm 50= %e\n",ddm_fm.data[50].power);
     printf("H = %e\n",jacob.data[4912].value);
 
-    //DDMobs_saveToFile(l1data, sampleIndex,pathType);
-    //DDMfm_saveToFile(ddm_fm, sampleIndex,pathType);
+    DDMobs_saveToFile(l1data, sampleIndex,pathType);
+    DDMfm_saveToFile(ddm_fm, sampleIndex,pathType);
     //Jacobian_saveToFile(jacob);
     //PtsVec_saveToFile(jacob);
 
