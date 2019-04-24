@@ -8,8 +8,12 @@
 
 #define NLAT_core 501   //core: resolution = 0.02deg
 #define NLON_core 501
+
 #define NLAT_syno 721   //synopric: resolution = 0.125deg
 #define NLON_syno 881
+
+//#define NLAT_syno 721   //synopric: resolution = 0.125deg
+//#define NLON_syno 961
 
 #define ERR(e) {printf("Error: %s\n", nc_strerror(e));}
 
@@ -59,7 +63,6 @@ void init_powerParm(struct CYGNSSL1 l1data, struct powerParm *pp){
     FILE *file;
     char *Rx_filename = getRxAntenna(l1data.sc_num, l1data.ddm_ant);
     file = fopen(Rx_filename,"rb");
-    //file = fopen("../../Data/antennaRx_CYGNSS_Obs1_Nadir01_Port_E2ES_v3.bin","rb");
 
     if (file == NULL){
         printf("fail to open antenna file\n");

@@ -12,7 +12,21 @@ double find_opt_delayshift(char L1dataFilename[], int sampleIndex, int ddmIndex)
 void FiniteDiff(char windFilename[], char HWRFtype[], char L1dataFilename[], int sampleIndex, int ddmIndex, int pathType);
 
 int main() {
+    ///// Maria 20170923 1800
+    /*
+    char windFilename[1000] = "../../Data/Maria2017/maria15l.2017092318.hwrfprs.synoptic.0p125.f000.nc";
+    char L1dataFilename[1000] = "../../Data/Maria2017/cyg05.ddmi.s20170923-000000-e20170923-235959.l1.power-brcs.a21.d21.nc";
+    int pathType = 1; //0 for current; 1 for folder
+    int ddmIndex = 0;
+    for (int index = 65059; index < 65060; index++){   //80928-81111
+        Process_DDM(windFilename,"synoptic", L1dataFilename, index, ddmIndex, pathType);
+    }
+    */
+
+    ///// Irma 20170904 2300
+
     //Irma ddmIndex=0, 80928-81111, eye = 81095
+    //char windFilename[1000] = "../../Data/Irma2017/irma201709042240shift.nc";  //check NLAT NLON in initilization.c
     char windFilename[1000] = "../../Data/Irma2017/irma11l.2017090418.hwrfprs.synoptic.0p125.f005.uv.nc";
     char L1dataFilename[1000] = "../../Data/Irma2017/cyg04.ddmi.s20170904-000000-e20170904-235959.l1.power-brcs.a21.d21.nc";
     //char L1dataFilename[1000] = "../../Data/Irma2017/cyg04.ddmi.s20170904-000000-e20170904-235959.l1.power-brcs.sand031.nc";
@@ -20,13 +34,14 @@ int main() {
     //Process_DDM(windFilename, "synoptic", L1dataFilename, 81096, 0, 0);
     //FiniteDiff(windFilename, "synoptic", L1dataFilename, 81096, 0, 0);
 
-    int pathType = 0; //0 for current; 1 for folder
+    int pathType = 1; //0 for current; 1 for folder
     int ddmIndex = 0;
-    for (int index = 81095; index < 81096; index++){   //80928-81111
+    for (int index = 81100; index < 81101; index++){   //80928-81111  81095
        Process_DDM(windFilename,"synoptic", L1dataFilename, index, ddmIndex, pathType);
     }
 
-    /////////////////////
+
+    ///// Gita 20180212 1400
     //Gita ddmIndex=2 50571-50730, eye = 50640
     //char windFilename[1000] = "../../Data/Gita2018/gita09p.2018021212.hwrfprs.synoptic.0p125.f002.uv.nc";
     //char windFilename[1000] = "../../Data/Gita2018/gita09p.2018021212.hwrfprs.core.0p02.f002.uv.nc";
@@ -60,7 +75,10 @@ int main() {
 void Process_DDM(char windFilename[], char HWRFtype[], char L1dataFilename[], int sampleIndex, int ddmIndex, int pathType){
     struct CYGNSSL1 l1data;
     readL1data(L1dataFilename, sampleIndex, ddmIndex, &l1data);
-    if(l1data.quality_flags != 0) return; //skip data of quality issue
+    if(l1data.quality_flags != 0) {
+        printf("quality flags not 0\n");
+        return; //skip data of quality issue
+    }
 
     printf("sampleIndex = %d, quality_flags = %d\n", sampleIndex, l1data.quality_flags);
     printf("GPS PRN = %d\n", l1data.prn_code);
