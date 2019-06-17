@@ -13,33 +13,32 @@ void FiniteDiff(char windFilename[], char HWRFtype[], char L1dataFilename[], int
 
 int main() {
     ///// Maria 20170923 1800
-    /*
+
     char windFilename[1000] = "../../Data/Maria2017/maria15l.2017092318.hwrfprs.synoptic.0p125.f000.nc";
     char L1dataFilename[1000] = "../../Data/Maria2017/cyg05.ddmi.s20170923-000000-e20170923-235959.l1.power-brcs.a21.d21.nc";
-    int pathType = 1; //0 for current; 1 for folder
+    int pathType = 0; //0 for current; 1 for folder
     int ddmIndex = 0;
-    for (int index = 65059; index < 65060; index++){   //80928-81111
-        Process_DDM(windFilename,"synoptic", L1dataFilename, index, ddmIndex, pathType);
+    for (int index = 65182; index < 65183; index++){ //65050-65250
+      Process_DDM(windFilename,"synoptic", L1dataFilename, index, ddmIndex, pathType);
     }
-    */
+
 
     ///// Irma 20170904 2300
-
+    /*
     //Irma ddmIndex=0, 80928-81111, eye = 81095
     //char windFilename[1000] = "../../Data/Irma2017/irma201709042240shift.nc";  //check NLAT NLON in initilization.c
     char windFilename[1000] = "../../Data/Irma2017/irma11l.2017090418.hwrfprs.synoptic.0p125.f005.uv.nc";
     char L1dataFilename[1000] = "../../Data/Irma2017/cyg04.ddmi.s20170904-000000-e20170904-235959.l1.power-brcs.a21.d21.nc";
-    //char L1dataFilename[1000] = "../../Data/Irma2017/cyg04.ddmi.s20170904-000000-e20170904-235959.l1.power-brcs.sand031.nc";
 
     //Process_DDM(windFilename, "synoptic", L1dataFilename, 81096, 0, 0);
     //FiniteDiff(windFilename, "synoptic", L1dataFilename, 81096, 0, 0);
 
-    int pathType = 1; //0 for current; 1 for folder
+    int pathType = 0; //0 for current; 1 for folder
     int ddmIndex = 0;
-    for (int index = 81100; index < 81101; index++){   //80928-81111  81095
+    for (int index = 81095; index < 81096; index++){   //80928-81111  81095
        Process_DDM(windFilename,"synoptic", L1dataFilename, index, ddmIndex, pathType);
     }
-
+    */
 
     ///// Gita 20180212 1400
     //Gita ddmIndex=2 50571-50730, eye = 50640
@@ -55,14 +54,15 @@ int main() {
     //}
     ////////////////////////
 
+    //specular delay shift
     /*
     double shift, f_index;  // calculate optimal delay bin shift
     int k = 0;
     FILE *outp = fopen("Delayshift.dat","ab+");;
-    for (int index = 50720; index < 50730; index++){  //80981-81111    50571-50730
+    for (int index = 65241; index < 65250; index++){  //65123-65250 ;80981-81111    50571-50730
         printf("index = %d\n",index);
-        shift=find_opt_delayshift(L1dataFilename, index, 2);
-        f_index = (double)index;
+        shift=find_opt_delayshift(L1dataFilename, index, ddmIndex);
+        f_index = (double)index; //turn it to double to write into file
         fwrite(&f_index, 1, sizeof(double), outp);
         fwrite(&shift, 1, sizeof(double), outp);
         k++;
@@ -82,10 +82,12 @@ void Process_DDM(char windFilename[], char HWRFtype[], char L1dataFilename[], in
 
     printf("sampleIndex = %d, quality_flags = %d\n", sampleIndex, l1data.quality_flags);
     printf("GPS PRN = %d\n", l1data.prn_code);
-    //l1data.ddm_sp_delay_row = l1data.ddm_sp_delay_row + 0.5;
+    //l1data.ddm_sp_delay_row = l1data.ddm_sp_delay_row + 1.0;
     printf("sp delay row = %f, sp doppler col = %f\n", l1data.ddm_sp_delay_row,l1data.ddm_sp_dopp_col);
     printf("sp lat = %f, lon = %f\n",l1data.sp_lat,l1data.sp_lon);
     printf("ant = %d\n",l1data.ddm_ant);
+    printf("incidence angle = %f\n",l1data.sp_inc_angle);
+
     //printf("peak delay row = %d\n", l1data.ddm_peak_delay_row);
     //printf("peak doppler col = %d\n", l1data.ddm_peak_dopp_col);
     struct metadata meta;
@@ -117,7 +119,7 @@ void Process_DDM(char windFilename[], char HWRFtype[], char L1dataFilename[], in
 
     DDMobs_saveToFile(l1data, sampleIndex,pathType);
     DDMfm_saveToFile(ddm_fm, sampleIndex,pathType);
-    //Jacobian_saveToFile(jacob);
+    Jacobian_saveToFile(jacob);
     //PtsVec_saveToFile(jacob);
 
     free(pp.data);
@@ -135,7 +137,7 @@ double find_opt_delayshift(char L1dataFilename[], int sampleIndex, int ddmIndex)
     int shift_index;
     double shift[11]={-0.5,-0.4,-0.3,-0.2,-0.1, 0 ,0.1,0.2,0.3,0.4,0.5};
     struct CYGNSSL1 l1data;
-    readL1data(L1dataFilename, sampleIndex, 0, &l1data);
+    readL1data(L1dataFilename, sampleIndex, ddmIndex, &l1data);
     if(l1data.quality_flags != 0){
         printf("skip by quality control\n");
         return NAN; //skip data of quality issue
@@ -143,7 +145,8 @@ double find_opt_delayshift(char L1dataFilename[], int sampleIndex, int ddmIndex)
     shift_index = 0;//optimal shift
     correlation = 0;
     for (int i =0; i<11;i++){
-        temp = DDM_binshift_corr(L1dataFilename, sampleIndex, 0, shift[i]);
+        temp = DDM_binshift_corr(L1dataFilename, sampleIndex, ddmIndex, shift[i]);
+        //printf("temp = %f\n",temp);
         if (temp>correlation){
             correlation = temp;
             shift_index = i;
@@ -169,7 +172,10 @@ double DDM_binshift_corr(char L1dataFilename[], int sampleIndex, int ddmIndex, d
     struct Jacobian jacob;
 
     //char windFileName[1000] = "../../Data/HWRF/irma11l.2017090418.hwrfprs.synoptic.0p125.f005.nc";
-    char windFileName[1000] = "../../Data/Gita2018/gita09p.2018021212.hwrfprs.core.0p02.f002.uv.nc";
+    //char windFileName[1000] = "../../Data/Gita2018/gita09p.2018021212.hwrfprs.core.0p02.f002.uv.nc";
+
+    char windFileName[1000] = "../../Data/Maria2017/maria15l.2017092318.hwrfprs.synoptic.0p125.f000.nc";
+
     init_metadata(l1data, &meta);
     init_powerParm(l1data, &pp);
     init_inputWindField_synoptic(windFileName, &iwf);
@@ -194,6 +200,9 @@ double DDM_binshift_corr(char L1dataFilename[], int sampleIndex, int ddmIndex, d
     for (int i=0;i<187;i++){
         ddm_fm0[i]=ddm_fm.data[i].power;
     }
+
+    //printf("OBS FM = %e %e\n",ddm_obs[66],ddm_fm0[66]);
+
 
     int num_effbin = 0;
     int effbin_index[187];

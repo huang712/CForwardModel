@@ -234,6 +234,14 @@ void ddm_Hmatrix(struct metadata meta, struct inputWindField iwf, struct Jacobia
     }
     free(a);
 
+    int save_indexLL=1;
+    if(save_indexLL==1){
+        FILE *outp = fopen("/users/fax/CYGNSS/CForwardModel/cmake-build-debug/indexLL.dat", "wb");
+        fwrite(indexLL, sizeof(int), numPt_LL, outp);
+        fclose(outp);
+    }
+
+
     //construct M matrix M: 14400 x K
     double **M; // T[14400][K] interpolation transformation matrix: fill it with bi_weight[14400][4]
     M = (double**)calloc(numSurfacePt1, sizeof(double*));
@@ -569,7 +577,7 @@ void ddm_genAmbFunc(int prn_code){
     int centerDopplerBin = (int) floor(ddm.numDoppBins/2);  //200
 
     for (int l=0; l < ddm.numDelayBins; l++) {  //l=0:399
-        dtau_s =  (l - centerDelayBin) * ddm.delayRes_chips * tauChip_s; //(l-200)*0.05*tauChip_s
+        dtau_s =  (l - centerDelayBin) * ddm.delayRes_chips * tauChip_s; //(l-200)*0.05*tauChip_s =
         for (int k=0; k < ddm.numDoppBins; k++) {
             dfreq_Hz = (k - centerDopplerBin) * ddm.dopplerRes_Hz;
             //DDM[DDMINDEX(k,l)] = lambda(dtau_s,tauChip_s,cohIntTime_s) * S(dfreq_Hz,cohIntTime_s);

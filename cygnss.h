@@ -21,9 +21,8 @@ struct CYGNSSL1
     double ant_temperature_cels;
     double gps_eirp_watt;
     double noise_figue;
+    double sp_inc_angle;
 
-    int ddm_peak_delay_row;
-    int ddm_peak_dopp_col;
     double ddm_sp_delay_row;
     double ddm_sp_dopp_col;
 

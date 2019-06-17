@@ -9,10 +9,10 @@
 #define NLAT_core 501   //core: resolution = 0.02deg
 #define NLON_core 501
 
-#define NLAT_syno 721   //synopric: resolution = 0.125deg
+#define NLAT_syno 721   //synoptic: resolution = 0.125deg
 #define NLON_syno 881
 
-//#define NLAT_syno 721   //synopric: resolution = 0.125deg
+//#define NLAT_syno 721   //synoptic: resolution = 0.125deg
 //#define NLON_syno 961
 
 #define ERR(e) {printf("Error: %s\n", nc_strerror(e));}
