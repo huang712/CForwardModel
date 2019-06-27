@@ -16,7 +16,7 @@ void DDMfm_saveToFile(struct DDMfm ddm_fm, int index, int pathType) {
             outp = fopen("DDMfm.dat","wb");
             break;
         case 1:
-            sprintf(filename, "DDMfm/DDMfm%d.dat", index);
+            sprintf(filename, "DDMfm/DDMfm%05d.dat", index);
             outp = fopen(filename, "wb");
             break;
     }

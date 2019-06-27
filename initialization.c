@@ -42,7 +42,7 @@ void init_metadata(struct CYGNSSL1 l1data, struct metadata *meta) {
     meta->excess_noisefloor_dB = 0;
 
     meta->grid_resolution_m = 1000;
-    meta->numGridPoints[0] = 120;
+    meta->numGridPoints[0] = 120; //if change this, the bi_index0[] and bi_weight0[] in gnssr.h need to be changed as well; and jaociban
     meta->numGridPoints[1] = 120;
     meta->surfaceCurvatureType = 1;//1 = spherical, 2 = flat
 
@@ -106,7 +106,7 @@ void init_powerParm(struct CYGNSSL1 l1data, struct powerParm *pp){
 }
 
 void init_inputWindField_core(char windFileName[], struct inputWindField *iwf){
-    printf("read wind field file\n");
+    printf("read core wind field file \n");
     int ncid;
     int lat_varid, lon_varid, U10_varid, V10_varid;
 
@@ -127,9 +127,9 @@ void init_inputWindField_core(char windFileName[], struct inputWindField *iwf){
 
     //
     /* Get the varids of the latitude and longitude coordinate variables. */
-    if ((retval = nc_inq_varid(ncid, "latitude", &lat_varid)))  //lat_varid = 0;  lat_0
+    if ((retval = nc_inq_varid(ncid, "latitude", &lat_varid)))  //lat_varid = 0;  lat_0 latitude
     ERR(retval);
-    if ((retval = nc_inq_varid(ncid, "longitude", &lon_varid)))
+    if ((retval = nc_inq_varid(ncid, "longitude", &lon_varid))) //longitude
     ERR(retval);
 
     /* Read the coordinate variable data. */
@@ -164,11 +164,14 @@ void init_inputWindField_core(char windFileName[], struct inputWindField *iwf){
     iwf->data = (struct inputWindFieldPixel *)calloc(iwf->numPts,sizeof(struct inputWindFieldPixel));
 
     int ind;
-    for(int lat = 0; lat < NLAT_core; lat++){
-        for(int lon = 0;lon < NLON_core; lon++){
-            ind = lon * NLAT_core + lat;
+
+    for(int lon = 0; lon < NLON_core; lon++){
+        for(int lat = 0;lat < NLAT_core; lat++){
+            ind = lat * NLON_core + lon; //this should probably change
             iwf->data[ind].windSpeed_U10_ms = U10[lat][lon];
             iwf->data[ind].windSpeed_V10_ms= V10[lat][lon];
+            iwf->data[ind].windSpeed_ms=sqrt(iwf->data[ind].windSpeed_U10_ms*iwf->data[ind].windSpeed_U10_ms+
+                                             iwf->data[ind].windSpeed_V10_ms*iwf->data[ind].windSpeed_V10_ms);
             iwf->data[ind].rainRate_mmhr = 0;
             iwf->data[ind].freezingHeight_m = 2;
             iwf->data[ind].lat_deg = lats[lat];
@@ -235,14 +238,11 @@ void init_inputWindField_synoptic(char windFileName[], struct inputWindField *iw
     iwf->data = (struct inputWindFieldPixel *)calloc(iwf->numPts,sizeof(struct inputWindFieldPixel));
 
     int ind;
-    for(int lat = 0; lat < NLAT_syno; lat++){
-        for(int lon = 0;lon < NLON_syno; lon++){
-            ind = lon * NLAT_syno + lat; //this should probably change
+    for(int lon = 0; lon < NLON_syno; lon++){
+        for(int lat = 0;lat < NLAT_syno; lat++){
+            ind = lat * NLON_syno + lon; //this should probably change
             iwf->data[ind].windSpeed_U10_ms = U10[lat][lon];
-            if(iwf->data[ind].windSpeed_U10_ms > 1000) iwf->data[ind].windSpeed_U10_ms=NAN;
             iwf->data[ind].windSpeed_V10_ms= V10[lat][lon];
-            if(iwf->data[ind].windSpeed_V10_ms > 1000) iwf->data[ind].windSpeed_V10_ms=NAN;
-
             iwf->data[ind].windSpeed_ms=sqrt(iwf->data[ind].windSpeed_U10_ms*iwf->data[ind].windSpeed_U10_ms+
                                              iwf->data[ind].windSpeed_V10_ms*iwf->data[ind].windSpeed_V10_ms);
             iwf->data[ind].rainRate_mmhr = 0;
@@ -251,6 +251,50 @@ void init_inputWindField_synoptic(char windFileName[], struct inputWindField *iw
             iwf->data[ind].lon_deg = lons[lon];
         }
     }
+
+}
+
+void init_inputWindField_ECMWF(char dataFileName[], struct inputWindField *iwf){
+    //read wind field from a data file
+    //lon: 0-360
+    //they are hard coded now
+    printf("read wind from ECMWF data\n");
+    iwf->numPtsLon = 2880;
+    iwf->numPtsLat = 720;
+    iwf->numPts=iwf->numPtsLon*iwf->numPtsLat;
+    iwf->lat_min_deg = -45;
+    iwf->lat_max_deg = 44.875;
+    iwf->lon_min_deg = 0;
+    iwf->lon_max_deg = 359.875;
+    iwf->resolution_lat_deg = 0.125;
+    iwf->resolution_lon_deg = 0.125;
+    iwf->data = (struct inputWindFieldPixel *)calloc(iwf->numPts,sizeof(struct inputWindFieldPixel));
+    FILE *file;
+    file = fopen(dataFileName,"rb");
+    if (file==NULL){
+        printf("fail to open wind data\n");
+        exit(1);
+    }
+
+    double *windData = (double *)calloc(iwf->numPts*2, sizeof(double));
+    int numBytesReadFromFile = (int)fread(windData, sizeof(double),iwf->numPts*2,file);
+    int ind;
+    for(int lon = 0; lon < iwf->numPtsLon; lon++){
+        for(int lat = 0;lat < iwf->numPtsLat; lat++){
+            ind = lat * iwf->numPtsLon + lon;
+            iwf->data[ind].windSpeed_U10_ms = windData[lat*iwf->numPtsLon+lon];
+            iwf->data[ind].windSpeed_V10_ms = windData[iwf->numPts+lat*iwf->numPtsLon+lon];
+            iwf->data[ind].windSpeed_ms=sqrt(iwf->data[ind].windSpeed_U10_ms*iwf->data[ind].windSpeed_U10_ms+
+                                             iwf->data[ind].windSpeed_V10_ms*iwf->data[ind].windSpeed_V10_ms);
+            iwf->data[ind].rainRate_mmhr = 0;
+            iwf->data[ind].freezingHeight_m = 2;
+            iwf->data[ind].lat_deg = iwf->lat_min_deg+lat*iwf->resolution_lat_deg;
+            iwf->data[ind].lon_deg = iwf->lon_min_deg+lon*iwf->resolution_lon_deg;
+        }
+    }
+
+    free(windData);
+    fclose(file);
 }
 
 void init_Geometry(struct CYGNSSL1 l1data, struct Geometry *geom){
@@ -288,7 +332,7 @@ void init_DDM(struct CYGNSSL1 l1data, struct DDMfm *ddm_fm){
 
 void init_Jacobian(struct Jacobian *jacob){
     jacob->numDDMbins = 187;
-    jacob->numPts_LL = 144; //initialize it large enough 100-120
+    jacob->numPts_LL = 144; //initialize it large enough
 
     int numBin = jacob->numDDMbins * jacob->numPts_LL;
     jacob->data = (struct JacobianPixel *)calloc(numBin,sizeof(struct JacobianPixel));

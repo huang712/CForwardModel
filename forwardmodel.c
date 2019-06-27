@@ -11,6 +11,7 @@ void forwardModel(struct metadata meta, struct powerParm pp, struct inputWindFie
     printf("Running forward model...\n");
     surface_initialize(meta);
     ddm_initialize(meta);
+
     antenna_initialize(pp);
     //ddmaLUT_initialize();
 
@@ -40,15 +41,13 @@ void forwardModel(struct metadata meta, struct powerParm pp, struct inputWindFie
     ddm_mapSurfaceToDDM();
     ddm_convolveFFT(2);
     ddm_mag(); //save to DDM[i];
-
     ddm_save(meta,ddm_fm,1);  //save to structure ddm_fm
 
     if (option == 1){
         ddm_Hmatrix(meta, iwf, jacob);  //compute and save to structure jacob
     }
 
-
-    //surface_saveWindToFile();
+    surface_saveWindToFile();
     surface_saveDopplerToFile();
     surface_saveDelayToFile();
 }

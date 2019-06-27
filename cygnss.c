@@ -133,7 +133,7 @@ void DDMobs_saveToFile(struct CYGNSSL1 l1data, int index, int pathType) {
             outp = fopen("DDMobs.dat","wb");
             break;
         case 1:
-            sprintf(filename, "DDMobs/DDMobs%d.dat", index);
+            sprintf(filename, "DDMobs/DDMobs%05d.dat", index);
             outp = fopen(filename, "wb");
             break;
     }

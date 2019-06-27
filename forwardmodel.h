@@ -138,6 +138,7 @@ void init_metadata(struct CYGNSSL1 l1data, struct metadata *meta);
 void init_powerParm(struct CYGNSSL1 l1data, struct powerParm *pp);
 void init_inputWindField_core(char windFileName[], struct inputWindField *iwf);
 void init_inputWindField_synoptic(char windFileName[], struct inputWindField *iwf);
+void init_inputWindField_ECMWF(char dataFileName[], struct inputWindField *iwf);
 void init_Geometry(struct CYGNSSL1 l1data, struct Geometry *geom);
 void init_DDM(struct CYGNSSL1 l1data, struct DDMfm *ddm_fm);
 void init_Jacobian(struct Jacobian *jacob);
