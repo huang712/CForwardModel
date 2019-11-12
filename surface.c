@@ -225,11 +225,11 @@ void surface_calcGeomOverSurface(orbitGeometryStruct *geometry, int surfType, st
             // calculate the geometry-dependent, windfield-independent power factor for
             // the scattering equation.
             Area_dS  = pow(surface.resolution_m,2);
-            normal   = 1 / n_vec[2]; // Account for change in surface area due to Earth curvature
+            normal   = 1 / n_vec[2]; // Account for change in surface area due to Earth curvature, very very small
             TxP      = pow(10,(TXP_DB/10)); // Tx Power
             lambda   = L1_WAVELENGTH;
             Ti       = ddm.cohIntegrationTime_s;
-            extra    = pow(10,((-ATTEN_DB)/10));
+            extra    = pow(10,((-ATTEN_DB)/10));  //atmosphere loss; equal to zero by default
             pathloss = 1 / ( pow(R1,2) * pow(R2,2) );
             // removed pow(Ti,2) factor
             powerFactor    = TxP * pow(lambda,2) * TxG * RxG * Area_dS * normal * extra * pathloss / pow(4*pi,3); //PowerFactor

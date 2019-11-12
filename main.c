@@ -12,16 +12,24 @@ double find_opt_delayshift(char L1dataFilename[], int sampleIndex, int ddmIndex)
 void FiniteDiff(char windFilename[], char HWRFtype[], char L1dataFilename[], int sampleIndex, int ddmIndex, int pathType);
 
 int main() {
+
+    /// Maria 20170923 1800 inc = 53
+//    char windFilename[1000] = "../../Data/Maria2017/0924/maria15l.2017092418.hwrfprs.synoptic.0p125.f000.nc";
+//    //char windFilename[1000] = "../../Data/Maria2017/0924/maria15l.2017092412.hwrfprs.synoptic.0p125.f006.nc";
+//   // char windFilename[1000] = "../../Data/Maria2017/0924/maria15l.2017092406.hwrfprs.synoptic.0p125.f012.nc";
+//    char L1dataFilename[1000] = "../../Data/Maria2017/0924/cyg02.ddmi.s20170924-000000-e20170924-235959.l1.power-brcs.a21.d21.nc";
+//    int pathType = 0; //0 for current; 1 for folder
+//    int ddmIndex = 3;
+//    for (int index = 65910; index < 65911; index++){ //65774:66004
+//      Process_DDM(windFilename,"synoptic", L1dataFilename, index, ddmIndex, pathType);
+//    }
+
      //20170601 00:00-00:20 ECMWF
-    char windFilename[1000] = "/Users/fax/CYG-SCAT/data/ECMWF/2017060100/testOut_0600_2017060100.dat"; //10min at 0601
-    char L1dataFilename[1000] = "/Users/fax/CYG-SCAT/data/CYGNSS/152/cyg05.ddmi.s20170601-000000-e20170601-235959.l1.power-brcs.a21.d21.nc";
-    int pathType = 1; //0 for current; 1 for folder
-    int ddmIndex = 0; //zero based
-    for (int index = 793; index < 922; index++){  //409-922
-        Process_DDM(windFilename,"ECMWF", L1dataFilename, index, ddmIndex, pathType);
-    }
-//        int ddmIndex = 3; //zero based
-//    for (int index = 429; index < 745; index++){  //409-922
+//    char windFilename[1000] = "/Users/fax/CYG-SCAT/data/ECMWF/20170601/2017060103/testOut_1800_2017060103.dat"; //10min at 0601
+//    char L1dataFilename[1000] = "/users/fax/CYG-SCAT/data/CYGNSS/152/cyg05.ddmi.s20170601-000000-e20170601-235959.l1.power-brcs.a21.d21.nc";
+//    int pathType = 1; //0 for current; 1 for folder
+//    int ddmIndex = 2; //zero based
+//    for (int index = 12944; index < 13199; index++){  //409-922
 //        Process_DDM(windFilename,"ECMWF", L1dataFilename, index, ddmIndex, pathType);
 //    }
 
@@ -37,22 +45,22 @@ int main() {
 //    Process_DDM(windFilename,"synoptic", L1dataFilename, index, ddmIndex, pathType);
 
 
-    ///// Maria 20170923 1800
-//    char windFilename[1000] = "../../Data/Maria2017/maria15l.2017092318.hwrfprs.synoptic.0p125.f000.nc";
-//    char L1dataFilename[1000] = "../../Data/Maria2017/cyg05.ddmi.s20170923-000000-e20170923-235959.l1.power-brcs.a21.d21.nc";
+    ///// Maria 20170923 1800  inc = 58
+//    char windFilename[1000] = "../../Data/Maria2017/0923/maria15l.2017092318.hwrfprs.synoptic.0p125.f000.nc";
+//    char L1dataFilename[1000] = "../../Data/Maria2017/0923/cyg05.ddmi.s20170923-000000-e20170923-235959.l1.power-brcs.a21.d21.nc";
 //    int pathType = 0; //0 for current; 1 for folder
 //    int ddmIndex = 0;
-//    for (int index = 65010; index < 65011; index++){ //65050-65250
+//    for (int index = 64806; index < 64807; index++){ //65050-65250
 //      Process_DDM(windFilename,"synoptic", L1dataFilename, index, ddmIndex, pathType);
 //    }
 
     ///// Irma 20170904 2300
 
-    //Irma ddmIndex=0, 80928-81111, eye = 81095
-//    char windFilename[1000] = "../../Data/Irma2017/irma11l.2017090418.hwrfprs.synoptic.0p125.f005.uv.nc";
-//    char L1dataFilename[1000] = "../../Data/Irma2017/cyg04.ddmi.s20170904-000000-e20170904-235959.l1.power-brcs.a21.d21.nc";
-//
-//    //Process_DDM(windFilename, "synoptic", L1dataFilename, 81096, 0, 0);
+    //Irma ddmIndex=0, 80928-81111, eye = 81095  inc = 35
+    char windFilename[1000] = "../../Data/Irma2017/irma11l.2017090418.hwrfprs.synoptic.0p125.f005.uv.nc";
+    char L1dataFilename[1000] = "../../Data/Irma2017/cyg04.ddmi.s20170904-000000-e20170904-235959.l1.power-brcs.a21.d21.nc";
+
+    Process_DDM(windFilename, "synoptic", L1dataFilename, 81095, 0, 0);
 //    //FiniteDiff(windFilename, "synoptic", L1dataFilename, 81096, 0, 0);
 //
 //    int pathType = 0; //0 for current; 1 for folder

@@ -125,12 +125,12 @@ void wind_interpolate(windField *wf,struct Geometry geom, struct inputWindField 
         PUT_H[i] = pos_lla[2];
     }
 
-//    FILE *outp = fopen("PUT.dat", "wb");
-//    for (int i = 0;i< numPts;i++) {
-//        fwrite(&PUT_LAT[i], sizeof(double), 1, outp);
-//        fwrite(&PUT_LON[i], sizeof(double), 1, outp);
-//    }
-//    fclose(outp);
+    FILE *outp = fopen("PUT.dat", "wb");
+    for (int i = 0;i< numPts;i++) {
+        fwrite(&PUT_LAT[i], sizeof(double), 1, outp);
+        fwrite(&PUT_LON[i], sizeof(double), 1, outp);
+    }
+    fclose(outp);
 
 
     //Interpolate iwf.data[] to wf.data[]
